@@ -40,9 +40,10 @@ export default function DashboardPage() {
                 <CardTitle className="text-lg leading-tight">{assignment.title}</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 pb-3">
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {assignment.description}
-                </p>
+                <div 
+                  className="text-sm text-muted-foreground line-clamp-2 [&>*]:my-0"
+                  dangerouslySetInnerHTML={{ __html: assignment.description }}
+                />
                 <div className="mt-4 flex items-center text-xs text-muted-foreground gap-4">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />

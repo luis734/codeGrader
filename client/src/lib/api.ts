@@ -69,6 +69,13 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ name, email, password, role }),
       }),
+    update: (id: string, data: { name?: string; email?: string; password?: string; role?: "admin" | "student" }) =>
+      fetchApi(`/api/users/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchApi(`/api/users/${id}`, { method: "DELETE" }),
   },
 
   assignments: {
@@ -89,6 +96,21 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    update: (id: string, data: {
+      title?: string;
+      description?: string;
+      dueDate?: string;
+      language?: string;
+      minTestsToPass?: number;
+      starterCode?: string;
+      tests?: Array<{ name: string; input: string; expected: string }>;
+    }) =>
+      fetchApi(`/api/assignments/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchApi(`/api/assignments/${id}`, { method: "DELETE" }),
   },
 
   submissions: {

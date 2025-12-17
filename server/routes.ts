@@ -26,6 +26,27 @@ const createAssignmentSchema = z.object({
   })),
 });
 
+const updateUserSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(6).optional(),
+  role: z.enum(["admin", "student"]).optional(),
+});
+
+const updateAssignmentSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  dueDate: z.string().optional(),
+  language: z.string().optional(),
+  minTestsToPass: z.number().optional(),
+  starterCode: z.string().optional(),
+  tests: z.array(z.object({
+    name: z.string(),
+    input: z.string(),
+    expected: z.string(),
+  })).optional(),
+});
+
 const submitCodeSchema = z.object({
   code: z.string(),
   passedTests: z.number(),
@@ -153,6 +174,54 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = updateUserSchema.parse(req.body);
+      
+      const updateData: any = {};
+      if (data.name) updateData.name = data.name;
+      if (data.email) updateData.email = data.email;
+      if (data.role) updateData.role = data.role;
+      if (data.password) {
+        updateData.passwordHash = await bcrypt.hash(data.password, 10);
+      }
+
+      const user = await storage.updateUser(id, updateData);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const { passwordHash: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: fromZodError(error).toString() });
+      }
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Prevent self-deletion
+      if (req.session.userId === id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+
+      const deleted = await storage.deleteUser(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   // Assignment routes
   app.get("/api/assignments", requireAuth, async (req: any, res) => {
     try {
@@ -256,6 +325,61 @@ export async function registerRoutes(
         return res.status(400).json({ error: fromZodError(error).toString() });
       }
       res.status(500).json({ error: "Failed to create assignment" });
+    }
+  });
+
+  app.patch("/api/assignments/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = updateAssignmentSchema.parse(req.body);
+      
+      const { tests: testData, ...assignmentData } = data;
+
+      // Update assignment fields
+      const assignment = await storage.updateAssignment(id, assignmentData);
+      if (!assignment) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+
+      // If tests are provided, replace all tests
+      let updatedTests;
+      if (testData) {
+        await storage.deleteTestsByAssignment(id);
+        const testsToCreate = testData.map((test) => ({
+          assignmentId: id,
+          name: test.name,
+          input: test.input,
+          expected: test.expected,
+        }));
+        updatedTests = await storage.createTests(testsToCreate);
+      } else {
+        updatedTests = await storage.getTestsByAssignment(id);
+      }
+
+      res.json({ 
+        assignment: {
+          ...assignment,
+          tests: updatedTests,
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: fromZodError(error).toString() });
+      }
+      res.status(500).json({ error: "Failed to update assignment" });
+    }
+  });
+
+  app.delete("/api/assignments/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteAssignment(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete assignment" });
     }
   });
 

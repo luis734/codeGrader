@@ -13,13 +13,25 @@ interface AppContextType {
   refreshUsers: () => Promise<void>;
   refreshAssignments: () => Promise<void>;
   addUser: (name: string, email: string, password: string) => Promise<void>;
+  updateUser: (id: string, data: { name?: string; email?: string; password?: string; role?: "admin" | "student" }) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
   addAssignment: (data: {
     title: string;
     description: string;
     dueDate: string;
     minTestsToPass: number;
+    starterCode: string;
     tests: Array<{ name: string; input: string; expected: string }>;
   }) => Promise<void>;
+  updateAssignment: (id: string, data: {
+    title?: string;
+    description?: string;
+    dueDate?: string;
+    minTestsToPass?: number;
+    starterCode?: string;
+    tests?: Array<{ name: string; input: string; expected: string }>;
+  }) => Promise<void>;
+  deleteAssignment: (id: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -127,24 +139,91 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = async (id: string, data: { name?: string; email?: string; password?: string; role?: "admin" | "student" }) => {
+    try {
+      await api.users.update(id, data);
+      await refreshUsers();
+      toast({ title: "User updated", description: "Changes saved successfully." });
+    } catch (error: any) {
+      toast({ 
+        title: "Failed to update user", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+      throw error;
+    }
+  };
+
+  const deleteUser = async (id: string) => {
+    try {
+      await api.users.delete(id);
+      await refreshUsers();
+      toast({ title: "User deleted", description: "User has been removed." });
+    } catch (error: any) {
+      toast({ 
+        title: "Failed to delete user", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+      throw error;
+    }
+  };
+
   const addAssignment = async (data: {
     title: string;
     description: string;
     dueDate: string;
     minTestsToPass: number;
+    starterCode: string;
     tests: Array<{ name: string; input: string; expected: string }>;
   }) => {
     try {
       await api.assignments.create({
         ...data,
         language: "C",
-        starterCode: "#include <stdio.h>\n\nint main() {\n    // Your code here\n    return 0;\n}",
       });
       await refreshAssignments();
       toast({ title: "Assignment created", description: `${data.title} has been published.` });
     } catch (error: any) {
       toast({ 
         title: "Failed to create assignment", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+      throw error;
+    }
+  };
+
+  const updateAssignment = async (id: string, data: {
+    title?: string;
+    description?: string;
+    dueDate?: string;
+    minTestsToPass?: number;
+    starterCode?: string;
+    tests?: Array<{ name: string; input: string; expected: string }>;
+  }) => {
+    try {
+      await api.assignments.update(id, data);
+      await refreshAssignments();
+      toast({ title: "Assignment updated", description: "Changes saved successfully." });
+    } catch (error: any) {
+      toast({ 
+        title: "Failed to update assignment", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+      throw error;
+    }
+  };
+
+  const deleteAssignment = async (id: string) => {
+    try {
+      await api.assignments.delete(id);
+      await refreshAssignments();
+      toast({ title: "Assignment deleted", description: "Assignment has been removed." });
+    } catch (error: any) {
+      toast({ 
+        title: "Failed to delete assignment", 
         description: error.message, 
         variant: "destructive" 
       });
@@ -162,8 +241,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       logout, 
       refreshUsers,
       refreshAssignments,
-      addUser, 
+      addUser,
+      updateUser,
+      deleteUser,
       addAssignment,
+      updateAssignment,
+      deleteAssignment,
     }}>
       {children}
     </AppContext.Provider>

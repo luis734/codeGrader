@@ -21,16 +21,21 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   
   // Assignment operations
   getAllAssignments(): Promise<Assignment[]>;
   getAssignment(id: string): Promise<Assignment | undefined>;
   createAssignment(assignment: InsertAssignment): Promise<Assignment>;
+  updateAssignment(id: string, data: Partial<InsertAssignment>): Promise<Assignment | undefined>;
+  deleteAssignment(id: string): Promise<boolean>;
   
   // Test operations
   getTestsByAssignment(assignmentId: string): Promise<Test[]>;
   createTest(test: InsertTest): Promise<Test>;
   createTests(tests: InsertTest[]): Promise<Test[]>;
+  deleteTestsByAssignment(assignmentId: string): Promise<void>;
   
   // Submission operations
   getSubmission(userId: string, assignmentId: string): Promise<Submission | undefined>;
@@ -58,6 +63,16 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined> {
+    const result = await db.update(users).set(data).where(eq(users.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
+  }
+
   async getAllAssignments(): Promise<Assignment[]> {
     return db.select().from(assignments);
   }
@@ -70,6 +85,16 @@ export class DatabaseStorage implements IStorage {
   async createAssignment(assignment: InsertAssignment): Promise<Assignment> {
     const result = await db.insert(assignments).values(assignment).returning();
     return result[0];
+  }
+
+  async updateAssignment(id: string, data: Partial<InsertAssignment>): Promise<Assignment | undefined> {
+    const result = await db.update(assignments).set(data).where(eq(assignments.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteAssignment(id: string): Promise<boolean> {
+    const result = await db.delete(assignments).where(eq(assignments.id, id)).returning();
+    return result.length > 0;
   }
 
   async getTestsByAssignment(assignmentId: string): Promise<Test[]> {
@@ -85,6 +110,10 @@ export class DatabaseStorage implements IStorage {
     if (testList.length === 0) return [];
     const result = await db.insert(tests).values(testList).returning();
     return result;
+  }
+
+  async deleteTestsByAssignment(assignmentId: string): Promise<void> {
+    await db.delete(tests).where(eq(tests.assignmentId, assignmentId));
   }
 
   async getSubmission(userId: string, assignmentId: string): Promise<Submission | undefined> {
