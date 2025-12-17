@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout";
 import { CodeEditor } from "@/components/code-editor";
 import { TestRunner, TestResult } from "@/components/test-runner";
 import { Button } from "@/components/ui/button";
-import { Upload, Download, Save, Play } from "lucide-react";
+import { Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ResizableHandle, 
@@ -13,24 +13,43 @@ import {
 import { useRoute } from "wouter";
 import { useApp } from "@/lib/app-context";
 import { Badge } from "@/components/ui/badge";
+import { api } from "@/lib/api";
 
 export default function EditorPage() {
   const [, params] = useRoute("/editor/:id");
-  const assignmentId = params?.id ? parseInt(params.id) : 1;
-  const { assignments, updateAssignmentStatus } = useApp();
+  const assignmentId = params?.id;
+  const { assignments, refreshAssignments } = useApp();
   
   // Find assignment
   const assignment = assignments.find(a => a.id === assignmentId) || assignments[0];
 
-  const [code, setCode] = useState(assignment.starterCode);
-  const [tests, setTests] = useState<TestResult[]>(assignment.tests);
+  const [code, setCode] = useState(assignment?.starterCode || "");
+  const [tests, setTests] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    setCode(assignment.starterCode);
-    setTests(assignment.tests);
-  }, [assignment]);
+    if (assignment) {
+      setCode(assignment.starterCode);
+      setTests(assignment.tests.map(t => ({
+        id: parseInt(t.id) || 0,
+        name: t.name,
+        input: t.input,
+        expected: t.expected,
+        status: "pending" as const,
+      })));
+    }
+  }, [assignment?.id]);
+
+  if (!assignment) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-full">
+          <p className="text-muted-foreground">Loading assignment...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -63,8 +82,8 @@ export default function EditorPage() {
     // Reset tests
     setTests(prev => prev.map(t => ({ ...t, status: "pending", actual: undefined })));
 
-    // Mock evaluation logic
-    const isCorrect = code.length > 50; // Simple length check for demo
+    // Mock evaluation logic (in real app, would compile and run on server)
+    const isCorrect = code.length > 100; // Simple check for demo
     
     // Simulate sequential test execution
     let passedCount = 0;
@@ -76,11 +95,11 @@ export default function EditorPage() {
         return newTests;
       });
 
-      await new Promise(resolve => setTimeout(resolve, 600)); // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 600));
 
       setTests(prev => {
         const newTests = [...prev];
-        const shouldPass = isCorrect || (i % 2 === 0); // Randomish pass pattern if "incorrect"
+        const shouldPass = isCorrect || (i % 2 === 0);
         if (shouldPass) passedCount++;
         
         newTests[i] = {
@@ -94,27 +113,41 @@ export default function EditorPage() {
 
     setIsRunning(false);
     
-    const passed = isCorrect ? tests.length : passedCount;
     const total = tests.length;
-    const scoreText = `${passed}/${total}`;
+    const scoreText = `${passedCount}/${total}`;
+    const isCompleted = passedCount >= assignment.minTestsToPass;
     
-    // Check if passed minimum required
-    const isCompleted = passed >= assignment.minTestsToPass;
-    
-    if (isCompleted) {
-        updateAssignmentStatus(assignment.id, "completed", scoreText);
+    // Submit to backend
+    try {
+      await api.submissions.submit(assignment.id, {
+        code,
+        passedTests: passedCount,
+        totalTests: total,
+        status: isCompleted ? "completed" : "in_progress",
+        score: scoreText,
+      });
+
+      // Refresh assignments to update status
+      await refreshAssignments();
+
+      if (isCompleted) {
         toast({
-            title: "Assignment Completed!",
-            description: `You passed ${passed}/${total} tests. Great job!`,
-            className: "bg-green-600 text-white border-none"
+          title: "Assignment Completed!",
+          description: `You passed ${passedCount}/${total} tests. Great job!`,
         });
-    } else {
-        updateAssignmentStatus(assignment.id, "in_progress", scoreText);
+      } else {
         toast({
-            title: "Tests Completed",
-            description: `You passed ${passed}/${total} tests. You need ${assignment.minTestsToPass} to complete.`,
-            variant: "destructive",
+          title: "Tests Completed",
+          description: `You passed ${passedCount}/${total} tests. You need ${assignment.minTestsToPass} to complete.`,
+          variant: "destructive",
         });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Submission failed",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -135,8 +168,9 @@ export default function EditorPage() {
                 accept=".c" 
                 className="absolute inset-0 opacity-0 cursor-pointer" 
                 onChange={handleFileUpload}
+                data-testid="input-upload-file"
               />
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-2" data-testid="button-upload">
                 <Upload className="h-4 w-4" />
                 Upload File
               </Button>
@@ -149,14 +183,9 @@ export default function EditorPage() {
               a.href = url;
               a.download = "solution.c";
               a.click();
-            }}>
+            }} data-testid="button-download">
               <Download className="h-4 w-4" />
               Download
-            </Button>
-            
-            <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700" onClick={runTests} disabled={isRunning}>
-              <Play className="h-4 w-4 fill-current" />
-              Run & Evaluate
             </Button>
           </div>
         </div>
@@ -178,7 +207,6 @@ export default function EditorPage() {
               tests={tests} 
               onRunTests={runTests} 
               isRunning={isRunning} 
-              score={undefined}
             />
           </ResizablePanel>
         </ResizablePanelGroup>

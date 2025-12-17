@@ -1,21 +1,27 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Terminal } from "lucide-react";
 import { useApp } from "@/lib/app-context";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useApp();
-  const [role, setRole] = useState<"student" | "admin">("student");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, role);
+    setIsLoading(true);
+    try {
+      await login(email, password);
+    } catch (error) {
+      // Error is handled in context with toast
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -27,47 +33,46 @@ export default function LoginPage() {
               <Terminal className="h-6 w-6" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to CodeCheck</CardTitle>
           <CardDescription>
             Sign in to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="student" onValueChange={(v) => setRole(v as any)} className="mb-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="student">Student</TabsTrigger>
-              <TabsTrigger value="admin">Admin (Master)</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input 
                 id="email" 
                 type="email" 
-                placeholder={role === "admin" ? "admin@codecheck.com" : "student@university.edu"}
+                placeholder="your@email.com"
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required defaultValue="password" />
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
-            <Button className="w-full" type="submit">
-              Sign In
+            <Button className="w-full" type="submit" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+          <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
+            <p className="font-medium">Demo Accounts:</p>
+            <p>Admin: admin@codecheck.com / admin123</p>
+            <p>Student: juan@university.edu / student123</p>
+          </div>
         </CardContent>
-        <div className="px-6 pb-6 text-center text-sm text-muted-foreground">
-          <p>
-            {role === "admin" 
-              ? "Use admin@codecheck.com to demo Master Account" 
-              : "Use juan@university.edu to demo Student Account"}
-          </p>
-        </div>
       </Card>
     </div>
   );

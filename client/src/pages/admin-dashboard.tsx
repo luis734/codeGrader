@@ -6,69 +6,68 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp } from "@/lib/app-context";
 import { useState } from "react";
-import { Plus, UserPlus, FileCode, Users, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { UserPlus, FileCode, Users, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function AdminPage() {
   const { users, assignments, addUser, addAssignment } = useApp();
-  const { toast } = useToast();
 
   // User Form State
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
 
   // Assignment Form State
   const [newAssignTitle, setNewAssignTitle] = useState("");
   const [newAssignDesc, setNewAssignDesc] = useState("");
-  const [newAssignTests, setNewAssignTests] = useState(""); // Simplified for demo: separate by newline
+  const [newAssignTests, setNewAssignTests] = useState("");
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserName || !newUserEmail) return;
+    if (!newUserName || !newUserEmail || !newUserPassword) return;
     
-    addUser({
-      name: newUserName,
-      email: newUserEmail,
-      role: "student"
-    });
-    
-    setNewUserName("");
-    setNewUserEmail("");
-    toast({ title: "User created", description: `${newUserName} has been added.` });
+    try {
+      await addUser(newUserName, newUserEmail, newUserPassword);
+      setNewUserName("");
+      setNewUserEmail("");
+      setNewUserPassword("");
+    } catch (error) {
+      // Error handled in context
+    }
   };
 
-  const handleAddAssignment = (e: React.FormEvent) => {
+  const handleAddAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAssignTitle) return;
 
-    // Parse tests (simple mock parsing)
-    // Format: Input|Expected
-    const parsedTests = newAssignTests.split("\n").filter(t => t.includes("|")).map((t, i) => {
-      const [input, expected] = t.split("|");
-      return {
-        id: i + 1,
-        name: `Test Case ${i + 1}`,
-        input: input.trim(),
-        expected: expected.trim(),
-        status: "pending" as const
-      };
-    });
+    // Parse tests (Input|Expected format)
+    const parsedTests = newAssignTests
+      .split("\n")
+      .filter(t => t.includes("|"))
+      .map((t, i) => {
+        const [input, expected] = t.split("|");
+        return {
+          name: `Test Case ${i + 1}`,
+          input: input.trim(),
+          expected: expected.trim(),
+        };
+      });
 
-    addAssignment({
-      title: newAssignTitle,
-      description: newAssignDesc,
-      dueDate: "Due in 1 week",
-      language: "C",
-      minTestsToPass: parsedTests.length, // Require all for now
-      tests: parsedTests,
-      starterCode: "#include <stdio.h>\n\nint main() {\n    // Code here\n    return 0;\n}"
-    });
+    try {
+      await addAssignment({
+        title: newAssignTitle,
+        description: newAssignDesc,
+        dueDate: "Due in 1 week",
+        minTestsToPass: parsedTests.length,
+        tests: parsedTests,
+      });
 
-    setNewAssignTitle("");
-    setNewAssignDesc("");
-    setNewAssignTests("");
-    toast({ title: "Assignment created", description: `${newAssignTitle} has been published.` });
+      setNewAssignTitle("");
+      setNewAssignDesc("");
+      setNewAssignTests("");
+    } catch (error) {
+      // Error handled in context
+    }
   };
 
   return (
@@ -96,22 +95,25 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {users.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {user.avatarInitials}
+                    {users.map((user) => {
+                      const initials = user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+                      return (
+                        <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                              {initials}
+                            </div>
+                            <div>
+                              <p className="font-medium">{user.name}</p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
+                          <Badge variant={user.role === "admin" ? "default" : "secondary"}>
+                            {user.role}
+                          </Badge>
                         </div>
-                        <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                          {user.role}
-                        </Badge>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -130,6 +132,10 @@ export default function AdminPage() {
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input id="email" type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="alice@edu.com" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input id="password" type="password" value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="Min. 6 characters" required minLength={6} />
                     </div>
                     <Button type="submit" className="w-full gap-2">
                       <UserPlus className="h-4 w-4" /> Create User
@@ -157,11 +163,14 @@ export default function AdminPage() {
                         </div>
                         <p className="text-sm text-muted-foreground line-clamp-2">{assign.description}</p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                          <span>Tests: {assign.tests.length}</span>
+                          <span>Tests: {assign.tests?.length || 0}</span>
                           <span>Min to pass: {assign.minTestsToPass}</span>
                         </div>
                       </div>
                     ))}
+                    {assignments.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8">No assignments created yet.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -188,6 +197,7 @@ export default function AdminPage() {
                         placeholder={"1|Odd\n2|Even\n10|Even"}
                         value={newAssignTests}
                         onChange={e => setNewAssignTests(e.target.value)}
+                        required
                       />
                       <p className="text-xs text-muted-foreground">One test case per line. Format: Input|Output</p>
                     </div>

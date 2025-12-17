@@ -12,17 +12,19 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useApp();
 
+  if (!user) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
   const studentNavItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/editor", icon: Code2, label: "Code Editor" }, // Generic link, redirects or shows list in real app
   ];
 
   const adminNavItems = [
     { href: "/admin", icon: Shield, label: "Master Panel" },
-    // { href: "/admin/users", icon: Users, label: "Users" }, // We put everything in dashboard for simplicity
   ];
 
-  const navItems = user?.role === "admin" ? adminNavItems : studentNavItems;
+  const navItems = user.role === "admin" ? adminNavItems : studentNavItems;
 
   return (
     <div className="flex h-screen bg-background">
@@ -41,6 +43,7 @@ export function Layout({ children }: LayoutProps) {
             return (
               <Link key={item.href} href={item.href}>
                 <div
+                  data-testid={`nav-${item.href.slice(1)}`}
                   className={cn(
                     "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
                     isActive
@@ -57,25 +60,20 @@ export function Layout({ children }: LayoutProps) {
         </nav>
 
         <div className="p-4 border-t">
-          {user ? (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-md bg-muted/50 mb-2">
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                {user.avatarInitials}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-medium truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-              </div>
+          <div className="flex items-center gap-3 px-4 py-3 rounded-md bg-muted/50 mb-2" data-testid="user-profile">
+            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+              {user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
             </div>
-          ) : (
-            <div className="px-4 py-3 text-sm text-muted-foreground">
-              Not signed in
+            <div className="overflow-hidden">
+              <p className="text-sm font-medium truncate" data-testid="text-username">{user.name}</p>
+              <p className="text-xs text-muted-foreground truncate" data-testid="text-useremail">{user.email}</p>
             </div>
-          )}
+          </div>
           <Button 
             variant="ghost" 
             className="w-full justify-start text-muted-foreground hover:text-destructive"
             onClick={logout}
+            data-testid="button-logout"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
