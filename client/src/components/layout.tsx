@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, LogOut, Terminal, Code2, User } from "lucide-react";
+import { LayoutDashboard, LogOut, Terminal, Code2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useApp } from "@/lib/app-context";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,11 +10,19 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
+  const { user, logout } = useApp();
 
-  const navItems = [
+  const studentNavItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/editor/new", icon: Code2, label: "Code Editor" },
+    { href: "/editor", icon: Code2, label: "Code Editor" }, // Generic link, redirects or shows list in real app
   ];
+
+  const adminNavItems = [
+    { href: "/admin", icon: Shield, label: "Master Panel" },
+    // { href: "/admin/users", icon: Users, label: "Users" }, // We put everything in dashboard for simplicity
+  ];
+
+  const navItems = user?.role === "admin" ? adminNavItems : studentNavItems;
 
   return (
     <div className="flex h-screen bg-background">
@@ -48,21 +57,29 @@ export function Layout({ children }: LayoutProps) {
         </nav>
 
         <div className="p-4 border-t">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-md bg-muted/50 mb-2">
-            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-              JS
+          {user ? (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-md bg-muted/50 mb-2">
+              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                {user.avatarInitials}
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
             </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-medium truncate">Juan Student</p>
-              <p className="text-xs text-muted-foreground truncate">juan@university.edu</p>
+          ) : (
+            <div className="px-4 py-3 text-sm text-muted-foreground">
+              Not signed in
             </div>
-          </div>
-          <Link href="/auth">
-            <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-destructive">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </Link>
+          )}
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-muted-foreground hover:text-destructive"
+            onClick={logout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
         </div>
       </aside>
 

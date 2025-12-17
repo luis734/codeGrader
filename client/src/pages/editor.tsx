@@ -10,52 +10,27 @@ import {
   ResizablePanel, 
   ResizablePanelGroup 
 } from "@/components/ui/resizable";
-
-// Mock template code
-const INITIAL_CODE = `#include <stdio.h>
-
-// Function to check if a number is prime
-// Returns 1 if prime, 0 otherwise
-int is_prime(int n) {
-    if (n <= 1) return 0;
-    // Your code here
-    return 0;
-}
-
-int main() {
-    int n;
-    scanf("%d", &n);
-    
-    if (is_prime(n)) {
-        printf("Prime\\n");
-    } else {
-        printf("Not Prime\\n");
-    }
-    
-    return 0;
-}
-`;
-
-const CORRECT_SNIPPET = `
-    for (int i = 2; i * i <= n; i++) {
-        if (n % i == 0) return 0;
-    }
-    return 1;
-`;
-
-const INITIAL_TESTS: TestResult[] = [
-  { id: 1, name: "Test Case 1: Small Prime", input: "7", expected: "Prime", status: "pending" },
-  { id: 2, name: "Test Case 2: Small Non-Prime", input: "4", expected: "Not Prime", status: "pending" },
-  { id: 3, name: "Test Case 3: Edge Case (1)", input: "1", expected: "Not Prime", status: "pending" },
-  { id: 4, name: "Test Case 4: Negative Number", input: "-5", expected: "Not Prime", status: "pending" },
-  { id: 5, name: "Test Case 5: Large Prime", input: "97", expected: "Prime", status: "pending" },
-];
+import { useRoute } from "wouter";
+import { useApp } from "@/lib/app-context";
+import { Badge } from "@/components/ui/badge";
 
 export default function EditorPage() {
-  const [code, setCode] = useState(INITIAL_CODE);
-  const [tests, setTests] = useState<TestResult[]>(INITIAL_TESTS);
+  const [, params] = useRoute("/editor/:id");
+  const assignmentId = params?.id ? parseInt(params.id) : 1;
+  const { assignments, updateAssignmentStatus } = useApp();
+  
+  // Find assignment
+  const assignment = assignments.find(a => a.id === assignmentId) || assignments[0];
+
+  const [code, setCode] = useState(assignment.starterCode);
+  const [tests, setTests] = useState<TestResult[]>(assignment.tests);
   const [isRunning, setIsRunning] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setCode(assignment.starterCode);
+    setTests(assignment.tests);
+  }, [assignment]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,11 +63,12 @@ export default function EditorPage() {
     // Reset tests
     setTests(prev => prev.map(t => ({ ...t, status: "pending", actual: undefined })));
 
-    // Determine if the code is "correct" (very simple check for the mock)
-    // In a real app, this would send code to backend
-    const isCorrect = code.includes("for") && code.includes("%") && code.includes("return 1");
+    // Mock evaluation logic
+    const isCorrect = code.length > 50; // Simple length check for demo
     
     // Simulate sequential test execution
+    let passedCount = 0;
+    
     for (let i = 0; i < tests.length; i++) {
       setTests(prev => {
         const newTests = [...prev];
@@ -100,12 +76,12 @@ export default function EditorPage() {
         return newTests;
       });
 
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 600)); // Simulate processing time
 
       setTests(prev => {
         const newTests = [...prev];
-        // If code looks roughly correct, pass most tests. If it has the specific snippet, pass all.
-        const shouldPass = isCorrect || (i < 2); // Always pass first 2 for demo if vaguely correct
+        const shouldPass = isCorrect || (i % 2 === 0); // Randomish pass pattern if "incorrect"
+        if (shouldPass) passedCount++;
         
         newTests[i] = {
           ...newTests[i],
@@ -118,12 +94,28 @@ export default function EditorPage() {
 
     setIsRunning(false);
     
-    const passedCount = isCorrect ? tests.length : 2;
-    toast({
-      title: isCorrect ? "All tests passed!" : "Some tests failed",
-      description: `Score: ${passedCount}/${tests.length}`,
-      variant: isCorrect ? "default" : "destructive",
-    });
+    const passed = isCorrect ? tests.length : passedCount;
+    const total = tests.length;
+    const scoreText = `${passed}/${total}`;
+    
+    // Check if passed minimum required
+    const isCompleted = passed >= assignment.minTestsToPass;
+    
+    if (isCompleted) {
+        updateAssignmentStatus(assignment.id, "completed", scoreText);
+        toast({
+            title: "Assignment Completed!",
+            description: `You passed ${passed}/${total} tests. Great job!`,
+            className: "bg-green-600 text-white border-none"
+        });
+    } else {
+        updateAssignmentStatus(assignment.id, "in_progress", scoreText);
+        toast({
+            title: "Tests Completed",
+            description: `You passed ${passed}/${total} tests. You need ${assignment.minTestsToPass} to complete.`,
+            variant: "destructive",
+        });
+    }
   };
 
   return (
@@ -132,7 +124,7 @@ export default function EditorPage() {
         {/* Toolbar */}
         <div className="h-14 border-b px-4 flex items-center justify-between bg-background">
           <div className="flex items-center gap-4">
-            <h2 className="font-semibold">Lab 2: Prime Number Calculator</h2>
+            <h2 className="font-semibold">{assignment.title}</h2>
             <Badge variant="outline" className="text-xs font-mono">main.c</Badge>
           </div>
           
@@ -186,6 +178,7 @@ export default function EditorPage() {
               tests={tests} 
               onRunTests={runTests} 
               isRunning={isRunning} 
+              score={undefined}
             />
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -193,5 +186,3 @@ export default function EditorPage() {
     </Layout>
   );
 }
-
-import { Badge } from "@/components/ui/badge";

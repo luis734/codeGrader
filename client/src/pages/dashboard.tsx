@@ -4,59 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
-
-const ASSIGNMENTS = [
-  {
-    id: 1,
-    title: "Lab 1: Hello World & Basic I/O",
-    description: "Write a program that prints 'Hello, World!' and reads user input.",
-    dueDate: "Due Today",
-    status: "completed",
-    score: "5/5",
-    language: "C",
-  },
-  {
-    id: 2,
-    title: "Lab 2: Prime Number Calculator",
-    description: "Implement a function to check if a number is prime and print primes up to N.",
-    dueDate: "Due Tomorrow",
-    status: "in_progress",
-    score: "2/5",
-    language: "C",
-  },
-  {
-    id: 3,
-    title: "Lab 3: Linked List Implementation",
-    description: "Create a singly linked list with insert, delete, and print functions.",
-    dueDate: "Due in 3 days",
-    status: "not_started",
-    score: "-/10",
-    language: "C",
-  },
-  {
-    id: 4,
-    title: "Midterm Project: Student Database",
-    description: "Manage student records using structs and file I/O.",
-    dueDate: "Due in 1 week",
-    status: "not_started",
-    score: "-/20",
-    language: "C",
-  },
-];
+import { useApp } from "@/lib/app-context";
 
 export default function DashboardPage() {
+  const { assignments } = useApp();
+
   return (
     <Layout>
       <div className="p-8 max-w-6xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
           <p className="text-muted-foreground mt-2">
             View your active assignments and track your progress.
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {ASSIGNMENTS.map((assignment) => (
+          {assignments.map((assignment) => (
             <Card key={assignment.id} className="flex flex-col border-l-4 border-l-transparent hover:border-l-primary transition-all duration-200 shadow-sm hover:shadow-md">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">

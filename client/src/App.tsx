@@ -6,16 +6,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
+import AdminPage from "@/pages/admin-dashboard";
 import EditorPage from "@/pages/editor";
+import { AppProvider } from "@/lib/app-context";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={LoginPage} />
       <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/admin" component={AdminPage} />
       <Route path="/editor/:id?" component={EditorPage} />
       
-      {/* Redirect root to auth for demo purposes */}
+      {/* Redirect root to auth */}
       <Route path="/">
         <Redirect to="/auth" />
       </Route>
@@ -28,10 +31,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AppProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AppProvider>
     </QueryClientProvider>
   );
 }
