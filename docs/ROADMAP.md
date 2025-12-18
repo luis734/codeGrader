@@ -23,7 +23,7 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 **Objetivo**: Poder compilar y ejecutar código C de forma controlada desde el backend, sin exponer la máquina de forma peligrosa.
 
-- [ ] Crear módulo `server/sandbox.ts` con:
+- [-] Crear módulo `server/sandbox.ts` con:
   - [ ] Función `compileC(sourceCode: string, workDir: string)` que:
     - [ ] Escriba `main.c` en un directorio temporal.
     - [ ] Llame a `gcc` (`child_process.spawn` o `execFile`).
