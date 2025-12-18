@@ -34,3 +34,15 @@ Al final de este chat debo tener:
 - Criterios de completitud verificables.
 - Decisiones técnicas justificadas para este punto.
 '
+
+---
+
+### Antes de cerrar un chat realizar un resumen para mantener el control de lo ultimo realizado y proximos paso a realizar.
+'
+Resume este chat en:
+- Decisiones tomadas
+- Qué quedó implementado
+- Qué queda pendiente
+- Qué sigue según el roadmap
+Este resumen guardalo en docs/NOTES.md
+'
