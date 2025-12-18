@@ -10,12 +10,12 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 ## 1. Documentación básica
 
-- [ ] Crear/actualizar `README.md` con:
-  - [ ] Descripción general del proyecto.
-  - [ ] Tecnologías principales.
-  - [ ] Requisitos (Node, PostgreSQL, `DATABASE_URL`).
-  - [ ] Pasos para correr el proyecto en local.
-- [ ] Añadir enlace a este `ROADMAP.md` desde el `README.md`.
+- [-] Crear/actualizar `README.md` con:
+  - [x] Descripción general del proyecto.
+  - [x] Tecnologías principales.
+  - [x] Requisitos (Node, PostgreSQL, `DATABASE_URL`).
+  - [x] Pasos para correr el proyecto en local.
+- [x] Añadir enlace a este `ROADMAP.md` desde el `README.md`.
 
 ---
 
