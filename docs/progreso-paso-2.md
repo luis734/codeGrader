@@ -138,8 +138,8 @@ Esta lista está pensada para que marques los ítems conforme avances. Está ali
 
 ### Diseño y concepto
 
-- [-] Entender y documentar el rol de `server/sandbox.ts` como servicio interno de compilación/ejecución.
-- [ ] Definir las firmas de las funciones principales (`compileC`, `runTest`) y sus tipos de retorno.
+- [x] Entender y documentar el rol de `server/sandbox.ts` como servicio interno de compilación/ejecución.
+- [x] Definir las firmas de las funciones principales (`compileC`, `runTest`) y sus tipos de retorno.
 
 ### Directorios temporales
 
