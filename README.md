@@ -118,3 +118,16 @@ http://localhost:5000
 El roadmap técnico detallado (sandbox para C, formato de tests, despliegue, etc.) está en:
 
 - `docs/ROADMAP.md`
+
+---
+
+## Licencia
+
+Este proyecto utiliza un modelo de licencia dual:
+
+- Uso educativo y no comercial: permitido bajo
+  Creative Commons BY-NC 4.0.
+- Uso comercial: requiere una licencia comercial
+  explícita otorgada por el autor.
+
+Para más detalles, ver el archivo LICENSE.
