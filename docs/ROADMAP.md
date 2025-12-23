@@ -10,7 +10,7 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 ## 1. Documentación básica
 
-- [-] Crear/actualizar `README.md` con:
+- [x] Crear/actualizar `README.md` con:
   - [x] Descripción general del proyecto.
   - [x] Tecnologías principales.
   - [x] Requisitos (Node, PostgreSQL, `DATABASE_URL`).

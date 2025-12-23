@@ -1,4 +1,7 @@
 import path from 'node:path';
+import crypto from "node:crypto";
+import fs from 'node:fs/promises';
+// import os from 'node:os';
 
 const TMP_BASE_DIR = path.join(process.cwd(), 'tmp');
 
@@ -21,9 +24,26 @@ export interface RunResult {
 // ### Firmas de las funciones
 export async function compileC(
     sourceCode: string,
-    workDir: string,
+    // workDir: string,
 ): Promise<CompileResult> {
-    // TODO Implementar funcionalidad para compilar main
+
+    const submissionId = generateSubmissionID();
+
+    // 1️⃣ Crear directorio de trabajo
+    const { workDir: finalWorkDir, sourcePath } = await ensureWorkDir(submissionId);
+
+    // 2️⃣ Escribir el archivo main.c
+    await fs.writeFile(sourcePath, sourceCode, {
+        encoding: 'utf-8'
+    });
+
+    // 3️⃣ Resultado provisional (aun no se compila)
+    return {
+        success: false,
+        stdout: '',
+        stderr: '',
+        timeout: false,
+    };
 }
 
 export async function runTest(
@@ -32,4 +52,39 @@ export async function runTest(
     timeoutMs: number,
 ): Promise<RunResult> {  
     // TODO Implementar funcionalidad para compilar main
+}
+
+function generateSubmissionID(): string {
+    // Obtenemos la fecha
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2,"0"); // Funcion anonima para normalizar a 2 digitos
+
+    const timestamp = 
+        now.getUTCFullYear().toString() +
+        pad(now.getUTCMonth()) +
+        pad(now.getUTCDay()) +
+        "T" +
+        pad(now.getUTCHours()) +
+        pad(now.getUTCMinutes()) +
+        pad(now.getUTCSeconds());
+
+    const randomHex = crypto.randomBytes(3).toString("hex");
+
+    return `${timestamp}-${randomHex}`;
+}
+
+function getBinaryName(): string {
+    // Si en el futuro queremos diferenciar por OS:
+    // return os.platform() === 'win32' ? 'main.exe' : 'main';
+    return 'main'
+}
+
+async function ensureWorkDir(submissionId: string) {
+    const workDir = path.join(TMP_BASE_DIR, submissionId);
+    await fs.mkdir(workDir, {recursive: true});
+
+    const sourcePath = path.join(workDir, 'main.c');
+    const binaryPath = path.join(workDir, getBinaryName());
+
+    return {workDir, sourcePath, binaryPath};
 }

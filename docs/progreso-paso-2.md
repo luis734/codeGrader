@@ -143,9 +143,9 @@ Esta lista está pensada para que marques los ítems conforme avances. Está ali
 
 ### Directorios temporales
 
-- [ ] Elegir la ruta base para temporales (`tmp/`).
-- [ ] Definir el formato de `submissionId` (por ahora puede ser algo simple: timestamp + random).
-- [ ] Acordar la convención `tmp/<submission-id>/` y documentarla.
+- [x] Elegir la ruta base para temporales (`tmp/`).
+- [x] Definir el formato de `submissionId` (por ahora puede ser algo simple: timestamp + 3 bytes random en hexadecimal).
+- [x] Acordar la convención `tmp/<submission-id>/` y documentarla.
 
 ### Lógica de compilación (conceptual + luego implementación)
 
