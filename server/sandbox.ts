@@ -1,6 +1,7 @@
 import path from 'node:path';
 import crypto from "node:crypto";
 import fs from 'node:fs/promises';
+import {spawn} from 'node:child_process';
 // import os from 'node:os';
 
 const TMP_BASE_DIR = path.join(process.cwd(), 'tmp');
@@ -30,20 +31,56 @@ export async function compileC(
     const submissionId = generateSubmissionID();
 
     // 1️⃣ Crear directorio de trabajo
-    const { workDir: finalWorkDir, sourcePath } = await ensureWorkDir(submissionId);
+    const { workDir: finalWorkDir, sourcePath, binaryPath } = await ensureWorkDir(submissionId);
 
     // 2️⃣ Escribir el archivo main.c
     await fs.writeFile(sourcePath, sourceCode, {
         encoding: 'utf-8'
     });
 
-    // 3️⃣ Resultado provisional (aun no se compila)
-    return {
-        success: false,
-        stdout: '',
-        stderr: '',
-        timeout: false,
-    };
+    // 3️⃣ Compiulamos y devolvemos el resultado
+    return new Promise<CompileResult> ((resolve) => {
+        const args = [
+            sourcePath,
+            '-std=c11',
+            '-O2',
+            '-Wall',
+            '-Wextra',
+            '-o',
+            binaryPath
+        ];
+
+        const gcc = spawn('gcc', args, {
+            cwd: finalWorkDir,
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+
+        let stdout = '';
+        let stderr = '';
+        let timeout = false;
+
+        // Captura de salida
+        gcc.stdout.on('data', (d) => stdout += d.toString());
+        gcc.stderr.on('data', (d) => stderr += d.toString());
+
+        // Timeout
+        const timer = setTimeout(() => {
+            timeout = true;
+            gcc.kill('SIGKILL');
+        }, 2000);
+
+        gcc.on('close', (exitCode) => {
+            clearTimeout(timer);
+
+            resolve({
+                success: exitCode === 0 && !timeout,
+                stdout,
+                stderr,
+                binaryPath: exitCode === 0 ? binaryPath : undefined,
+                timeout,
+            });
+        });
+    });
 }
 
 export async function runTest(

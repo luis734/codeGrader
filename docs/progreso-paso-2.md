@@ -149,9 +149,9 @@ Esta lista está pensada para que marques los ítems conforme avances. Está ali
 
 ### Lógica de compilación (conceptual + luego implementación)
 
-- [ ] Crear directorio de trabajo si no existe.
-- [ ] Escribir `main.c` en el directorio de trabajo.
-- [ ] Llamar a `gcc` mediante `child_process.spawn` o `execFile`, sin `shell`.
+- [x] Crear directorio de trabajo si no existe.
+- [x] Escribir `main.c` en el directorio de trabajo.
+- [-] Llamar a `gcc` mediante `child_process.spawn` o `execFile`, sin `shell`.
 - [ ] Implementar timeout de compilación.
 - [ ] Capturar `stdout` y `stderr`.
 - [ ] Devolver un resultado que indique éxito/fracaso y `binaryPath` cuando aplique.
