@@ -17,11 +17,10 @@ function Router() {
     <Switch>
       <Route path="/auth" component={LoginPage} />
       <ProtectedRoute path="/dashboard" component={DashboardPage} />
-      <ProtectedRoute path="/admin" component={AdminPage} />
+      <ProtectedRoute path="/admin" component={AdminPage} roles={['admin']} />
       <ProtectedRoute path="/editor/:id?" component={EditorPage} />
-
-        <Route path="/forbidden" component={Forbidden} />
       
+      <Route path="/forbidden" component={Forbidden} />
       {/* Redirect root to auth */}
       <Route path="/">
         <Redirect to="/auth" />
