@@ -151,18 +151,18 @@ Esta lista está pensada para que marques los ítems conforme avances. Está ali
 
 - [x] Crear directorio de trabajo si no existe.
 - [x] Escribir `main.c` en el directorio de trabajo.
-- [-] Llamar a `gcc` mediante `child_process.spawn` o `execFile`, sin `shell`.
-- [ ] Implementar timeout de compilación.
-- [ ] Capturar `stdout` y `stderr`.
-- [ ] Devolver un resultado que indique éxito/fracaso y `binaryPath` cuando aplique.
+- [x] Llamar a `gcc` mediante `child_process.spawn` o `execFile`, sin `shell`.
+- [x] Implementar timeout de compilación. (2 segundos).
+- [x] Capturar `stdout` y `stderr`.
+- [x] Devolver un resultado que indique éxito/fracaso y `binaryPath` cuando aplique.
 
 ### Lógica de ejecución de tests (conceptual + luego implementación)
 
-- [ ] Ejecutar el binario (`binaryPath`) con `spawn`.
-- [ ] Enviar `input` al `stdin` del proceso.
-- [ ] Capturar `stdout` y `stderr`.
-- [ ] Implementar timeout de ejecución (1–2 segundos).
-- [ ] Devolver `stdout`, `stderr`, `exitCode` y `timeout`.
+- [x] Ejecutar el binario (`binaryPath`) con `spawn`.
+- [x] Enviar `input` al `stdin` del proceso.
+- [x] Capturar `stdout` y `stderr`.
+- [x] Implementar timeout de ejecución (1–2 segundos).
+- [x] Devolver `stdout`, `stderr`, `exitCode` y `timeout`.
 
 ### Limpieza y seguridad básica
 

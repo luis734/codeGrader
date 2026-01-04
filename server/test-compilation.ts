@@ -1,4 +1,7 @@
-import { compileC } from "./sandbox";
+// Para ejecutar el archivo y correr la prueba del main ejecuta el comando: 
+// * npx tsx server/test-compilation.ts
+
+import { compileC, runTest } from "./sandbox";
 
 // Pequeño helper para imprimir resultados de forma legible
 function logResult(label: string, result: any) {
@@ -10,26 +13,59 @@ function logResult(label: string, result: any) {
   console.log("timeout:", result.timeout);
 }
 
+// Helper para imprimir resultados de un test
+function testResult(label: string, result: any) {
+    console.log(`\n=== ${label} ===`);
+    console.log("stdout:\n", result.stdout);
+    console.log("stderr:\n", result.stderr);
+    console.log("exitCode:", result.exitCode);
+    console.log("timeout:", result.timeout);
+}
+
 async function main() {
-  // Caso 1: Código válido
-  const helloWorld = `#include <stdio.h>
+//     // * PRUEBA DE COMPILACIÓN
+//   // Caso 1: Código válido
+//   const helloWorld = `#include <stdio.h>
+// int main() {
+//   printf("Hola mundo\\n");
+//   return 0;
+// }
+// `;
+
+//   const okResult = await compileC(helloWorld);
+//   logResult("Compilación exitosa esperada", okResult);
+
+//   // Caso 2: Código con error de compilación
+//   const badCode = `int main() {
+//   printf("Hola
+// }
+// `;
+
+//   const badResult = await compileC(badCode);
+//   logResult("Compilación con error esperada", badResult);
+
+    // * PRUEBA DE TESTS
+    // Caso 1: Test valido
+    const leerNum = `#include <stdio.h>
 int main() {
-  printf("Hola mundo\\n");
-  return 0;
-}
-`;
+    int num;
+    scanf("%d", &num);
+    printf("El numero es: %d\\n", num);
+    return 0;
+}`;
+    
+    // Compilamos el codigo
+    const result = await compileC(leerNum);
+    logResult("Compilacion del codigo", result);
 
-  const okResult = await compileC(helloWorld);
-  logResult("Compilación exitosa esperada", okResult);
+    // Ejecutamos un test solo si result.binaryPath está definido
+    if (result.binaryPath) {
+        const resultTest = await runTest(result.binaryPath, "6", 2000);
+        testResult("Test con exito",resultTest);
+    } else {
+        console.error("No se encontró binaryPath para ejecutar el test.");
+    }
 
-  // Caso 2: Código con error de compilación
-  const badCode = `int main() {
-  printf("Hola
-}
-`;
-
-  const badResult = await compileC(badCode);
-  logResult("Compilación con error esperada", badResult);
 }
 
 main().catch((err) => {

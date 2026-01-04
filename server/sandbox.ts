@@ -2,7 +2,7 @@ import path from 'node:path';
 import crypto from "node:crypto";
 import fs from 'node:fs/promises';
 import {spawn} from 'node:child_process';
-// import os from 'node:os';
+import os from 'node:os';
 
 const TMP_BASE_DIR = path.join(process.cwd(), 'tmp');
 
@@ -88,7 +88,55 @@ export async function runTest(
     input: string,
     timeoutMs: number,
 ): Promise<RunResult> {  
-    // TODO Implementar funcionalidad para compilar main
+    return new Promise<RunResult>((resolve) => {
+        const normalizedPath = path.resolve(binaryPath);
+        const workDir = path.dirname(normalizedPath);
+        
+        const test = spawn(normalizedPath, [], {
+            stdio: ['pipe', 'pipe', 'pipe'],
+            cwd: workDir,
+        });
+
+        let stdout = '';
+        let stderr = '';
+        let timeout = false;
+
+        const timer = setTimeout(() => {
+            timeout = true;
+            test.kill('SIGKILL');
+        }, timeoutMs);
+
+        // Manejar errores de spawn
+        test.on('error', (err: any) => {
+            clearTimeout(timer);
+            resolve({
+                stdout: '',
+                stderr: `Error al ejecutar: ${err.message}`,
+                exitCode: null,
+                timeout: false,
+            });
+        });
+
+        // Captura de salida
+        test.stdout.on('data', (d) => stdout += d.toString());
+        test.stderr.on('data', (d) => stderr += d.toString());
+
+        // Escribir el input al stdin del proceso
+        if (input) {
+            test.stdin.write(input);
+        }
+        test.stdin.end();
+
+        test.on('close', (exitCode) => {
+            clearTimeout(timer);
+            resolve({
+                exitCode,
+                stdout,
+                stderr,
+                timeout,
+            });
+        });
+    });
 }
 
 function generateSubmissionID(): string {
@@ -111,9 +159,7 @@ function generateSubmissionID(): string {
 }
 
 function getBinaryName(): string {
-    // Si en el futuro queremos diferenciar por OS:
-    // return os.platform() === 'win32' ? 'main.exe' : 'main';
-    return 'main'
+    return os.platform() === 'win32' ? 'main.exe' : 'main';
 }
 
 async function ensureWorkDir(submissionId: string) {
