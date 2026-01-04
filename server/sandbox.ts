@@ -72,10 +72,13 @@ export async function compileC(
         gcc.on('close', (exitCode) => {
             clearTimeout(timer);
 
+            // Limpiamos el mensaje de error solo si stderr tiene contenido
+            const cleanedStderr = stderr ? cleanGCCError(stderr) : '';
+
             resolve({
                 success: exitCode === 0 && !timeout,
                 stdout,
-                stderr,
+                stderr: cleanedStderr,
                 binaryPath: exitCode === 0 ? binaryPath : undefined,
                 timeout,
             });
@@ -129,10 +132,12 @@ export async function runTest(
 
         test.on('close', (exitCode) => {
             clearTimeout(timer);
+            // Limpiamos el mensaje de error solo si stderr tiene contenido
+            const cleanedStderr = stderr ? cleanGCCError(stderr) : '';
             resolve({
                 exitCode,
                 stdout,
-                stderr,
+                stderr: cleanedStderr,
                 timeout,
             });
         });
@@ -170,4 +175,23 @@ async function ensureWorkDir(submissionId: string) {
     const binaryPath = path.join(workDir, getBinaryName());
 
     return {workDir, sourcePath, binaryPath};
+}
+
+function cleanGCCError(stderr: string): string {
+    // Limpiar TODAS las rutas absolutas
+    stderr = stderr.replace(
+        /([A-Za-z]:[\\/][^\s:\n]+[\\/])/g,
+        ''
+    );
+
+    // Limpiar rutas intermedias del linker
+    stderr = stderr.replace(
+        /.*ld\.exe: /g,
+        ''
+    ).replace(
+        /collect2\.exe: /g,
+        ''
+    );
+    
+    return stderr.trim();
 }
