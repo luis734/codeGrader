@@ -9,14 +9,18 @@ import DashboardPage from "@/pages/dashboard";
 import AdminPage from "@/pages/admin-dashboard";
 import EditorPage from "@/pages/editor";
 import { AppProvider } from "@/lib/app-context";
+import ProtectedRoute from "./components/protected-route";
+import Forbidden from "./pages/forbidden";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={LoginPage} />
-      <Route path="/dashboard" component={DashboardPage} />
-      <Route path="/admin" component={AdminPage} />
-      <Route path="/editor/:id?" component={EditorPage} />
+      <ProtectedRoute path="/dashboard" component={DashboardPage} />
+      <ProtectedRoute path="/admin" component={AdminPage} />
+      <ProtectedRoute path="/editor/:id?" component={EditorPage} />
+
+        <Route path="/forbidden" component={Forbidden} />
       
       {/* Redirect root to auth */}
       <Route path="/">
