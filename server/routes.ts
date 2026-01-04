@@ -6,6 +6,7 @@ import { createUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import bcrypt from "bcryptjs";
+import { compileC, runTest } from "./sandbox";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -411,6 +412,61 @@ export async function registerRoutes(
       }
       res.status(500).json({ error: "Failed to submit code" });
     }
+  });
+
+  app.post("/api/assignments/:id/run-tests", requireAuth, async (req: any, res) => {
+    const { code } = req.body;
+
+    const assignment = await storage.getAssignment(req.params.id);
+    if(!assignment) {
+      return res.status(404).json({ error: "Assignment nof found" });
+    }
+
+    const testsList = await storage.getTestsByAssignment(assignment.id);
+
+    // 1️⃣ Compilamos el codigo
+    const compileResult = await compileC(code);
+
+    if(!compileResult.success || !compileResult.binaryPath) {
+      return res.json({
+        compileError: true,
+        stderr: compileResult.stderr
+      });
+    }
+
+    // 2️⃣ Ejecutamos tests
+    const results = [];
+    let passedCount = 0;
+
+    for (const test of testsList) {
+      const run = await runTest(
+        compileResult.binaryPath,
+        test.input,
+        1000 // Timeout de 1 segundo por test
+      );
+
+      const passed = 
+        !run.timeout && // Evaluamos si no hubo timeout
+        run.exitCode === 0 && // Evaluamos si el codigo de salida es correcto
+        run.stdout.trim() === test.expected.trim(); // Evaluamos si el codigo de salida es el esperado
+
+      if (passed) passedCount++;
+
+      results.push({
+        id: test.id,
+        name: test.name,
+        passed,
+        actual: run.stdout,
+        stderr: run.stderr,
+        timeout: run.timeout
+      });
+    }
+
+    res.json({
+      passedTests: passedCount,
+      totalTests: testsList.length,
+      results,
+    })
   });
 
   return httpServer;

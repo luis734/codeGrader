@@ -23,16 +23,16 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 **Objetivo**: Poder compilar y ejecutar código C de forma controlada desde el backend, sin exponer la máquina de forma peligrosa.
 
-- [-] Crear módulo `server/sandbox.ts` con:
-  - [ ] Función `compileC(sourceCode: string, workDir: string)` que:
-    - [ ] Escriba `main.c` en un directorio temporal.
-    - [ ] Llame a `gcc` (`child_process.spawn` o `execFile`).
-    - [ ] Aplique timeout de compilación y capture stdout/stderr.
-  - [ ] Función `runTest(binaryPath: string, input: string, timeoutMs: number)` que:
-    - [ ] Ejecute el binario con `stdin` = `input`.
-    - [ ] Aplique timeout corto (1–2s).
-    - [ ] Devuelva `stdout`, `stderr`, código de salida y si hubo timeout.
-- [ ] Definir convención de directorios temporales (`tmp/<submission-id>/`).
+- [x] Crear módulo `server/sandbox.ts` con:
+  - [x] Función `compileC(sourceCode: string, workDir: string)` que:
+    - [x] Escriba `main.c` en un directorio temporal.
+    - [x] Llame a `gcc` (`child_process.spawn` o `execFile`).
+    - [x] Aplique timeout de compilación y capture stdout/stderr.
+  - [x] Función `runTest(binaryPath: string, input: string, timeoutMs: number)` que:
+    - [x] Ejecute el binario con `stdin` = `input`.
+    - [x] Aplique timeout corto (1–2s).
+    - [x] Devuelva `stdout`, `stderr`, código de salida y si hubo timeout.
+- [x] Definir convención de directorios temporales (`tmp/<submission-id>/`).
 - [ ] Asegurar limpieza básica de archivos temporales (al terminar cada ejecución o por tarea periódica simple).
 
 ---

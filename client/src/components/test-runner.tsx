@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export interface TestResult {
-  id: number;
+  id: string;
   name: string;
   status: "pending" | "running" | "passed" | "failed";
   expected?: string;
@@ -109,7 +109,7 @@ export function TestRunner({ tests, onRunTests, isRunning, score }: TestRunnerPr
                       "bg-background border rounded px-2 py-1 mt-1",
                       test.status === "failed" ? "text-destructive" : "text-green-600"
                     )}>
-                      {test.actual}
+                      {test.actual || 'null'}
                     </div>
                   </div>
                 </div>

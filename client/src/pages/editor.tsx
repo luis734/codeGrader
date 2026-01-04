@@ -32,7 +32,7 @@ export default function EditorPage() {
     if (assignment) {
       setCode(assignment.starterCode);
       setTests(assignment.tests.map(t => ({
-        id: parseInt(t.id) || 0,
+        id: t.id,
         name: t.name,
         input: t.input,
         expected: t.expected,
@@ -82,72 +82,90 @@ export default function EditorPage() {
     // Reset tests
     setTests(prev => prev.map(t => ({ ...t, status: "pending", actual: undefined })));
 
-    // Mock evaluation logic (in real app, would compile and run on server)
-    const isCorrect = code.length > 100; // Simple check for demo
-    
-    // Simulate sequential test execution
-    let passedCount = 0;
-    
-    for (let i = 0; i < tests.length; i++) {
-      setTests(prev => {
-        const newTests = [...prev];
-        newTests[i] = { ...newTests[i], status: "running" };
-        return newTests;
-      });
-
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      setTests(prev => {
-        const newTests = [...prev];
-        const shouldPass = isCorrect || (i % 2 === 0);
-        if (shouldPass) passedCount++;
-        
-        newTests[i] = {
-          ...newTests[i],
-          status: shouldPass ? "passed" : "failed",
-          actual: shouldPass ? newTests[i].expected : "Error: Output mismatch"
-        };
-        return newTests;
-      });
-    }
-
-    setIsRunning(false);
-    
-    const total = tests.length;
-    const scoreText = `${passedCount}/${total}`;
-    const isCompleted = passedCount >= assignment.minTestsToPass;
-    
-    // Submit to backend
     try {
-      await api.submissions.submit(assignment.id, {
-        code,
-        passedTests: passedCount,
-        totalTests: total,
-        status: isCompleted ? "completed" : "in_progress",
-        score: scoreText,
-      });
+      // 1️⃣ Llamamos al backend
+      const response = await fetch(
+        `/api/assignments/${assignment.id}/run-tests`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ code }),
+        }
+      );
 
-      // Refresh assignments to update status
-      await refreshAssignments();
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `HTTP ${response.status}`);
+      }
 
-      if (isCompleted) {
+      const data = await response.json();
+      
+      
+      // 2️⃣ Error de compilacion
+      if (data.compileError) {
+        setTests(prev => 
+          prev.map(t => ({
+            ...t,
+            status: "failed",
+            actual: undefined,
+          }))
+        );
+
         toast({
-          title: "Assignment Completed!",
-          description: `You passed ${passedCount}/${total} tests. Great job!`,
+          title: "Compilation error",
+          description: data.stderr,
+          variant: "destructive"
         });
-      } else {
-        toast({
-          title: "Tests Completed",
-          description: `You passed ${passedCount}/${total} tests. You need ${assignment.minTestsToPass} to complete.`,
-          variant: "destructive",
+
+        return;
+      }
+
+      // 3️⃣ Mostrar resultado uno por uno (animacion)
+      let passedCount = 0;
+
+      for (let i = 0; i < data.results.length; i++) {
+        // Marcar como running
+        setTests(prev => {
+          const copy = [...prev];
+          copy[i] = { ...copy[i], status: "running" };
+          return copy;
+        });
+
+        await new Promise(r => setTimeout(r, 400));
+
+        const result = data.results[i];
+
+        if (result.passed) passedCount++;
+
+        setTests(prev => {
+          const copy = [...prev];
+          copy[i] = {
+            ...copy[i],
+            status: result.passed ? "passed" : "failed",
+            actual: result.passed ?
+            result.actual :
+            result.stderr || result.actual,
+          };
+
+          return copy;
         });
       }
+
+      toast({
+        title: "Tests completed",
+        description: `Passed ${passedCount}/${data.totalTests}`,
+      });
     } catch (error: any) {
       toast({
-        title: "Submission failed",
+        title: "Error running tests",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsRunning(false);
     }
   };
 
