@@ -1,17 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { api, type ApiUser, type ApiAssignment } from "./api";
+import { api, type ApiUser, type ApiAssignment, type ApiSubmission } from "./api";
 
 interface AppContextType {
   user: ApiUser | null;
   users: ApiUser[];
   assignments: ApiAssignment[];
+  submissions: ApiSubmission[];
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUsers: () => Promise<void>;
   refreshAssignments: () => Promise<void>;
+  refreshSubmissions: () => Promise<void>;
   addUser: (name: string, email: string, password: string) => Promise<void>;
   updateUser: (id: string, data: { name?: string; email?: string; password?: string; role?: "admin" | "student" }) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
@@ -32,6 +34,13 @@ interface AppContextType {
     tests?: Array<{ name: string; input: string; expected: string }>;
   }) => Promise<void>;
   deleteAssignment: (id: string) => Promise<void>;
+  submitAssignment: (assignmentId: string, data: {
+    code: string;
+    passedTests: number;
+    totalTests: number;
+    status: string;
+    score: string;
+  }) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -40,6 +49,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<ApiUser | null>(null);
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [assignments, setAssignments] = useState<ApiAssignment[]>([]);
+  const [submissions, setSubmissions] = useState<ApiSubmission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -60,6 +70,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
       refreshAssignments();
+      refreshSubmissions();
       if (user.role === "admin") {
         refreshUsers();
       }
@@ -231,22 +242,78 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshSubmissions = async () => {
+    try {
+      // Las submissions se obtienen junto con los assignments
+      // Extraemos las submissions de los assignments que tienen submission
+      const data = await api.assignments.list();
+      const submissionsList: ApiSubmission[] = [];
+      
+      // Si el usuario es estudiante, las submissions vienen en los assignments
+      if (user?.role === "student") {
+        // Extraer las submissions de los assignments
+        data.assignments.forEach((assignment: ApiAssignment) => {
+          if (assignment.submission) {
+            submissionsList.push(assignment.submission);
+          }
+        });
+      }
+      
+      setSubmissions(submissionsList);
+    } catch (error: any) {
+      toast({ 
+        title: "Failed to load submissions", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const submitAssignment = async (assignmentId: string, data: {
+    code: string;
+    passedTests: number;
+    totalTests: number;
+    status: string;
+    score: string;
+  }) => {
+    try {
+      const response = await api.submissions.submit(assignmentId, data);
+      await refreshSubmissions();
+      await refreshAssignments(); // Refrescar assignments para actualizar status y score
+      toast({ 
+        title: "Submission saved", 
+        description: `Your code has been submitted. Score: ${data.score}` 
+      });
+      return response;
+    } catch (error: any) {
+      toast({ 
+        title: "Failed to submit assignment", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+      throw error;
+    }
+  };
+
   return (
     <AppContext.Provider value={{ 
       user, 
       users, 
       assignments,
+      submissions,
       isLoading,
       login, 
       logout, 
       refreshUsers,
       refreshAssignments,
+      refreshSubmissions,
       addUser,
       updateUser,
       deleteUser,
       addAssignment,
       updateAssignment,
       deleteAssignment,
+      submitAssignment,
     }}>
       {children}
     </AppContext.Provider>

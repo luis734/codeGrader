@@ -166,9 +166,9 @@ Esta lista está pensada para que marques los ítems conforme avances. Está ali
 
 ### Limpieza y seguridad básica
 
-- [ ] Borrar el directorio `tmp/<submission-id>/` al terminar todas las ejecuciones relacionadas.
-- [ ] Evitar usar rutas que vengan directamente del usuario (siempre generadas por el servidor).
-- [ ] Asegurarse de no usar `exec` con comandos construidos a partir de strings peligrosos.
+- [-] Borrar el directorio `tmp/<submission-id>/` al terminar todas las ejecuciones relacionadas.
+- [x] Evitar usar rutas que vengan directamente del usuario (siempre generadas por el servidor).
+- [x] Asegurarse de no usar `exec` con comandos construidos a partir de strings peligrosos.
 
 ### Pruebas manuales
 

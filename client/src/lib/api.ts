@@ -18,6 +18,7 @@ export interface ApiAssignment {
   starterCode: string;
   status?: string;
   score?: string;
+  submission?: ApiSubmission;
   tests: ApiTest[];
 }
 
@@ -28,6 +29,18 @@ export interface ApiTest {
   expected: string;
   status?: string;
   actual?: string;
+}
+
+export interface ApiSubmission {
+  id: string;
+  userId: string;
+  assignmentId: string;
+  code: string;
+  status: string;
+  score: string;
+  passedTests: number;
+  totalTests: number;
+  submittedAt: string;
 }
 
 async function fetchApi(url: string, options?: RequestInit) {

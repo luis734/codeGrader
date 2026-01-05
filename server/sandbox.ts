@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {spawn} from 'node:child_process';
 import os from 'node:os';
 
-const TMP_BASE_DIR = path.join(process.cwd(), 'tmp');
+export const SANDBOX_BASE_DIR = path.join(process.cwd(), 'tmp');
 
 // ### Interfaces
 export interface CompileResult {
@@ -25,13 +25,10 @@ export interface RunResult {
 // ### Firmas de las funciones
 export async function compileC(
     sourceCode: string,
-    // workDir: string,
+    workDir: string,
 ): Promise<CompileResult> {
-
-    const submissionId = generateSubmissionID();
-
     // 1️⃣ Crear directorio de trabajo
-    const { workDir: finalWorkDir, sourcePath, binaryPath } = await ensureWorkDir(submissionId);
+    const { sourcePath, binaryPath } = await ensureWorkDir(workDir);
 
     // 2️⃣ Escribir el archivo main.c
     await fs.writeFile(sourcePath, sourceCode, {
@@ -51,7 +48,7 @@ export async function compileC(
         ];
 
         const gcc = spawn('gcc', args, {
-            cwd: finalWorkDir,
+            cwd: workDir,
             stdio: ['ignore', 'pipe', 'pipe'],
         });
 
@@ -144,7 +141,7 @@ export async function runTest(
     });
 }
 
-function generateSubmissionID(): string {
+export function generateSubmissionID(): string {
     // Obtenemos la fecha
     const now = new Date();
     const pad = (n: number) => n.toString().padStart(2,"0"); // Funcion anonima para normalizar a 2 digitos
@@ -167,8 +164,8 @@ function getBinaryName(): string {
     return os.platform() === 'win32' ? 'main.exe' : 'main';
 }
 
-async function ensureWorkDir(submissionId: string) {
-    const workDir = path.join(TMP_BASE_DIR, submissionId);
+async function ensureWorkDir(workDir: string) {
+    // const workDir = path.join(TMP_BASE_DIR, submissionId);
     await fs.mkdir(workDir, {recursive: true});
 
     const sourcePath = path.join(workDir, 'main.c');

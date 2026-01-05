@@ -3,8 +3,6 @@
 Plataforma web para evaluar automáticamente programas en C, pensada para cursos de programación básica/intermedia y como proyecto de portafolio.
 Permite que un administrador cree tareas con casos de prueba, y que los estudiantes editen código C en el navegador, ejecuten tests y envíen sus soluciones.
 
-> Nota: Actualmente la ejecución de C está simulada en el frontend. El roadmap incluye integrar compilación y ejecución real en el servidor.
-
 ---
 
 ## Tecnologías principales

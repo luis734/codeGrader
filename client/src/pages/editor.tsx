@@ -18,19 +18,23 @@ import { api } from "@/lib/api";
 export default function EditorPage() {
   const [, params] = useRoute("/editor/:id");
   const assignmentId = params?.id;
-  const { assignments, refreshAssignments } = useApp();
+  const { assignments, user, refreshAssignments } = useApp();
   
   // Find assignment
   const assignment = assignments.find(a => a.id === assignmentId) || assignments[0];
 
-  const [code, setCode] = useState(assignment?.starterCode || "");
+  // Usar código de submission previa si existe, sino usar starterCode
+  const [code, setCode] = useState(
+    assignment?.submission?.code || assignment?.starterCode || ""
+  );
   const [tests, setTests] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (assignment) {
-      setCode(assignment.starterCode);
+      // Cargar código de submission previa si existe, sino usar starterCode
+      setCode(assignment.submission?.code || assignment.starterCode);
       setTests(assignment.tests.map(t => ({
         id: t.id,
         name: t.name,
@@ -158,6 +162,56 @@ export default function EditorPage() {
         title: "Tests completed",
         description: `Passed ${passedCount}/${data.totalTests}`,
       });
+
+      // Actualizar la submission del usuario cuando los tests se completen correctamente
+      // Solo actualizar si la submission está "in_progress" y el nuevo score es mejor
+      try {
+        const status = passedCount >= assignment.minTestsToPass ? "completed" : "in_progress";
+        const newScore = `${passedCount}/${data.totalTests}`;
+        
+        // Obtener la submission actual del usuario para este assignment
+        const currentSubmission = assignment.submission;
+        
+        // Extraer el número de tests pasados de un score (formato: "X/Y")
+        const getPassedTests = (score: string): number => {
+          const [passed] = score.split('/').map(Number);
+          return passed;
+        };
+        
+        // Condiciones para actualizar:
+        // 1. No hay submission previa (primera vez)
+        // 2. O hay submission "in_progress" Y el nuevo score es mejor
+        const hasNoSubmission = !currentSubmission;
+        const isInProgress = currentSubmission?.status === "in_progress";
+        const isBetterScore = currentSubmission 
+          ? passedCount > getPassedTests(currentSubmission.score)
+          : false;
+        
+        const shouldUpdate = hasNoSubmission || (isInProgress && isBetterScore);
+        
+        if (shouldUpdate) {
+          await api.submissions.submit(assignment.id, {
+            code,
+            passedTests: passedCount,
+            totalTests: data.totalTests,
+            status,
+            score: newScore,
+          });
+          
+          // Refrescar las submissions y assignments para actualizar el estado
+          await refreshAssignments();
+        }
+      } catch (error: any) {
+        // No mostramos error al usuario si falla la actualización de la submission
+        // ya que los tests se ejecutaron correctamente
+        toast({
+          title: 'Error updating submission',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+      
+
     } catch (error: any) {
       toast({
         title: "Error running tests",
