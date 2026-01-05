@@ -40,10 +40,10 @@ export default function DashboardPage() {
                 <CardTitle className="text-lg leading-tight">{assignment.title}</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 pb-3">
-                <div 
+                {/* <div 
                   className="text-sm text-muted-foreground line-clamp-2 [&>*]:my-0"
                   dangerouslySetInnerHTML={{ __html: assignment.description }}
-                />
+                /> */}
                 <div className="mt-4 flex items-center text-xs text-muted-foreground gap-4">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
@@ -56,7 +56,7 @@ export default function DashboardPage() {
                       ) : (
                         <AlertCircle className="h-3 w-3 text-blue-600" />
                       )}
-                      Score: {assignment.score}
+                      Score: {assignment.score || '0/0'}
                     </div>
                   )}
                 </div>

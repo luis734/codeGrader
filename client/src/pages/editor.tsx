@@ -275,7 +275,11 @@ export default function EditorPage() {
           <ResizableHandle />
           
           <ResizablePanel defaultSize={35} minSize={20}>
-            <TestRunner 
+            <div
+              className="prose max-w-full px-4 py-2 max-h-2/10 overflow-auto border-b-1 text-justify"
+              dangerouslySetInnerHTML={{ __html: assignment.description }}
+            />
+            <TestRunner
               tests={tests} 
               onRunTests={runTests} 
               isRunning={isRunning} 
