@@ -9,13 +9,12 @@
   - `runTest` ya evalua el binario con la entrada, devolviendo `stdout/stderr/exitCode/timeout`.
   - Se añadió `server/test-compilation.ts` que corre un casos válido pasando un numero y leyendolo desde el binario `stdout`.
   - Limpieza automática de `tmp/<submission-id>/` tras las pruebas.
-
-- **Qué quedó pendiente**
-  - Realizar pruebas con mas casos de pruebas y tests.
   - Ajustar errores visuales:
     - El editor no tiene scroll, (posiblemente el test suite tampoco).
     - En el dashboard los datos no se despliegan correctamente.
-    - Agregar una seccion para tareas completadas, vencidas y proximas.
+
+- **Qué quedó pendiente**
+  - Agregar una seccion para tareas completadas, vencidas y proximas.
 
 ---
 
@@ -34,6 +33,7 @@
   - Se implementó lógica para actualizar submissions solo si están "in_progress" y el score es mejor.
   - El editor ahora carga automáticamente el código de la submission previa si existe, o el `starterCode` si no.
   - Se actualiza automáticamente el dashboard después de guardar una submission.
+  - Se agrego el input y etiquetas para mostrar la fecha de vencimiento.
 
 - **Qué quedó pendiente**
   - (Ver sección anterior)

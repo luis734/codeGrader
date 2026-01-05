@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { useApp } from "@/lib/app-context";
+import { formatRelativeDate } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { assignments } = useApp();
@@ -24,9 +25,9 @@ export default function DashboardPage() {
             <Card key={assignment.id} className="flex flex-col border-l-4 border-l-transparent hover:border-l-primary transition-all duration-200 shadow-sm hover:shadow-md">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">
-                  <Badge variant="outline" className="font-mono text-xs">
+                  {/* <Badge variant="outline" className="font-mono text-xs">
                     {assignment.language}
-                  </Badge>
+                  </Badge> */}
                   {assignment.status === "completed" && (
                     <Badge className="bg-green-600 hover:bg-green-700">Completed</Badge>
                   )}
@@ -47,7 +48,11 @@ export default function DashboardPage() {
                 <div className="mt-4 flex items-center text-xs text-muted-foreground gap-4">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {assignment.dueDate}
+                    {(() => {
+                      const formattedDate = formatRelativeDate(assignment.dueDate);
+                      if (formattedDate === "Vencido") return formattedDate;
+                      return `Vence ${formattedDate}`;
+                    })()}
                   </div>
                   {assignment.status !== "not_started" && (
                     <div className="flex items-center gap-1 font-medium">
