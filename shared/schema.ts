@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -50,6 +50,7 @@ export const tests = pgTable("tests", {
   name: text("name").notNull(),
   input: text("input").notNull(),
   expected: text("expected").notNull(),
+  secret: boolean("secret").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

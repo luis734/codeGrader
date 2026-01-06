@@ -22,6 +22,7 @@ export function Layout({ children }: LayoutProps) {
 
   const adminNavItems = [
     { href: "/admin", icon: Shield, label: "Master Panel" },
+    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   ];
 
   const navItems = user.role === "admin" ? adminNavItems : studentNavItems;

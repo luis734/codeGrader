@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout";
 import { CodeEditor } from "@/components/code-editor";
 import { TestRunner, TestResult } from "@/components/test-runner";
+import { InstructionBox } from "@/components/instruction-block";
 import { Button } from "@/components/ui/button";
 import { Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +42,7 @@ export default function EditorPage() {
         input: t.input,
         expected: t.expected,
         status: "pending" as const,
+        secret: t.secret
       })));
     }
   }, [assignment?.id]);
@@ -117,7 +119,7 @@ export default function EditorPage() {
             actual: undefined,
           }))
         );
-
+        console.log("ERROR DE COMPILACION: ", data);
         toast({
           title: "Compilation error",
           description: data.stderr,
@@ -274,16 +276,18 @@ export default function EditorPage() {
           
           <ResizableHandle />
           
-          <ResizablePanel defaultSize={35} minSize={20}>
-            <div
-              className="prose max-w-full px-4 py-2 max-h-2/10 overflow-auto border-b-1 text-justify"
-              dangerouslySetInnerHTML={{ __html: assignment.description }}
-            />
-            <TestRunner
-              tests={tests} 
-              onRunTests={runTests} 
-              isRunning={isRunning} 
-            />
+          <ResizablePanel defaultSize={35} minSize={20} className="flex flex-col h-full">
+            <div className="max-w-fullmax-h-[20%] overflow-auto">
+              <InstructionBox description={assignment.description}/>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              <TestRunner
+                tests={tests} 
+                onRunTests={runTests} 
+                isRunning={isRunning} 
+              />
+            </div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

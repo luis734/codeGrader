@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Play, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Play, Loader2, AlertCircle, LockKeyhole } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -9,6 +9,7 @@ export interface TestResult {
   id: string;
   name: string;
   status: "pending" | "running" | "passed" | "failed";
+  secret: boolean;
   expected?: string;
   actual?: string;
   input?: string;
@@ -79,6 +80,7 @@ export function TestRunner({ tests, onRunTests, isRunning, score }: TestRunnerPr
                 )}>
                   {test.name}
                 </span>
+                {test.secret && <LockKeyhole className="h-4 w-4 text-muted-foreground" />}
               </div>
               
               <Badge variant={
@@ -92,7 +94,7 @@ export function TestRunner({ tests, onRunTests, isRunning, score }: TestRunnerPr
               </Badge>
             </div>
 
-            {(test.status === "failed" || test.status === "passed") && (
+            {(test.status === "failed" || test.status === "passed" ) && !test.secret && (
               <div className="p-3 text-xs font-mono bg-muted/30 space-y-2">
                 <div>
                   <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Input:</span>
@@ -104,7 +106,7 @@ export function TestRunner({ tests, onRunTests, isRunning, score }: TestRunnerPr
                     <div className="bg-background border rounded px-2 py-1 mt-1 text-green-600/80">{test.expected}</div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Actual:</span>
+                    <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Output:</span>
                     <div className={cn(
                       "bg-background border rounded px-2 py-1 mt-1",
                       test.status === "failed" ? "text-destructive" : "text-green-600"

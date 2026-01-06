@@ -135,13 +135,24 @@ export default function AdminPage() {
 
     const parsedTests = newAssignTests
       .split("\n")
+      .map(line => line.trim())
       .filter(t => t.includes("|"))
-      .map((t, i) => {
-        const [input, expected] = t.split("|");
+      .map((line, i) => {
+        const parts = line.split("|").map(p => p.trim());
+
+        if (parts.length < 2) {
+          throw new Error(`Formato inválido en la linea ${i + 1}`);
+        }
+
+        const input = parts[0];
+        const expected = parts[1];
+        const secretRaw = parts[2];
+
         return {
           name: `Test Case ${i + 1}`,
           input: input.trim(),
           expected: expected.trim(),
+          secret: secretRaw === "true",
         };
       });
 
@@ -172,7 +183,7 @@ export default function AdminPage() {
     setEditAssignDueDate(assignment.dueDate);
     setEditMinTests(assignment.minTestsToPass);
     setEditStarterCode(assignment.starterCode);
-    setEditAssignTests(assignment.tests?.map(t => `${t.input}|${t.expected}`).join("\n") || "");
+    setEditAssignTests(assignment.tests?.map(t => `${t.input}|${t.expected}|${t.secret || ''}`).join("\n") || "");
   };
 
   const handleEditAssignment = async () => {
@@ -181,12 +192,22 @@ export default function AdminPage() {
     const parsedTests = editAssignTests
       .split("\n")
       .filter(t => t.includes("|"))
-      .map((t, i) => {
-        const [input, expected] = t.split("|");
+      .map((line, i) => {
+        const parts = line.split("|").map(p => p.trim());
+
+        if (parts.length < 2) {
+          throw new Error(`Formato inválido en la linea ${i + 1}`);
+        }
+
+        const input = parts[0];
+        const expected = parts[1];
+        const secretRaw = parts[2];
+
         return {
           name: `Test Case ${i + 1}`,
           input: input.trim(),
           expected: expected.trim(),
+          secret: secretRaw === "true",
         };
       });
 
@@ -375,10 +396,10 @@ export default function AdminPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Test Cases (Input|Expected)</Label>
+                      <Label>Test Cases (Input|Expected|Secret)</Label>
                       <textarea 
                         className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder={"1|Odd\n2|Even\n10|Even"}
+                        placeholder={"1|Odd\n2|Even|true\n10|Even|false"}
                         value={newAssignTests}
                         onChange={e => setNewAssignTests(e.target.value)}
                         required
@@ -474,7 +495,7 @@ export default function AdminPage() {
               <Input type="number" min={1} value={editMinTests} onChange={e => setEditMinTests(parseInt(e.target.value) || 1)} data-testid="input-edit-assignment-min-tests" />
             </div>
             <div className="space-y-2">
-              <Label>Test Cases (Input|Expected)</Label>
+              <Label>Test Cases (Input|Expected|Secret)</Label>
               <textarea 
                 className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder={"1|Odd\n2|Even"}

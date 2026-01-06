@@ -26,6 +26,7 @@ const createAssignmentSchema = z.object({
     name: z.string(),
     input: z.string(),
     expected: z.string(),
+    secret: z.boolean(),
   })),
 });
 
@@ -47,6 +48,7 @@ const updateAssignmentSchema = z.object({
     name: z.string(),
     input: z.string(),
     expected: z.string(),
+    secret: z.boolean(),
   })).optional(),
 });
 
@@ -258,6 +260,7 @@ export async function registerRoutes(
                 name: t.name,
                 input: t.input,
                 expected: t.expected,
+                secret: t.secret,
                 status: "pending",
               })),
             };
@@ -277,6 +280,7 @@ export async function registerRoutes(
               name: t.name,
               input: t.input,
               expected: t.expected,
+              secret: t.secret,
             })),
           };
         })
@@ -304,6 +308,7 @@ export async function registerRoutes(
             name: t.name,
             input: t.input,
             expected: t.expected,
+            secret: t.secret,
           })),
         }
       });
@@ -324,6 +329,7 @@ export async function registerRoutes(
         name: test.name,
         input: test.input,
         expected: test.expected,
+        secret: test.secret,
       }));
       
       const createdTests = await storage.createTests(testsToCreate);
@@ -364,6 +370,7 @@ export async function registerRoutes(
           name: test.name,
           input: test.input,
           expected: test.expected,
+          secret: test.secret,
         }));
         updatedTests = await storage.createTests(testsToCreate);
       } else {
