@@ -22,7 +22,7 @@ interface TestRunnerProps {
   score?: number;
 }
 
-export function TestRunner({ tests, onRunTests, isRunning, score }: TestRunnerProps) {
+export function TestRunner({ tests, onRunTests, isRunning }: TestRunnerProps) {
   const totalTests = tests.length;
   const passedTests = tests.filter(t => t.status === "passed").length;
 
@@ -55,7 +55,6 @@ export function TestRunner({ tests, onRunTests, isRunning, score }: TestRunnerPr
         <div>
           <h3 className="font-semibold text-lg">Test Suite</h3>
           <p className="text-sm text-muted-foreground">
-            {score !== undefined ? `${passedTests}/${totalTests} Passed` : "Ready to evaluate"}
           </p>
         </div>
         <Button 
@@ -123,15 +122,12 @@ export function TestRunner({ tests, onRunTests, isRunning, score }: TestRunnerPr
                 )}>
                   {test.status}
                 </Badge>
-                {!test.secret && (test.status === "failed" || test.status === "passed" || test.status === "pending") && (
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform",
-                      isExpanded && "rotate-180"
-                    )}
-                  />
-                )}
-                {test.secret && <LockKeyhole className="h-4 w-4 text-muted-foreground" />}
+
+                {/* Si es un test secreto se muestra el icono de candado, si no se muestra un flecha para indicar toggle */}
+                {test.secret ?
+                  <LockKeyhole className="h-4 w-4 text-muted-foreground" /> :
+                  <ChevronDown className={cn("h-4 w-4 transition-transform",isExpanded && "rotate-180")} />
+                }
               </div>
             </div>
 

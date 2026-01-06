@@ -353,6 +353,13 @@ export default function AdminPage() {
                         <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
                           <span>Tests: {assign.tests?.length || 0}</span>
                           <span>Min to pass: {assign.minTestsToPass}</span>
+                          <span>
+                            {(() => {
+                              const formattedDate = formatPrettyDate(assign.dueDate);
+                              if (formattedDate === "Vencido") return formattedDate;
+                              return `Vence: ${formattedDate}`;
+                            })()}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -405,7 +412,7 @@ export default function AdminPage() {
                         required
                         data-testid="input-new-assignment-tests"
                       />
-                      <p className="text-xs text-muted-foreground">One test case per line. Format: Input|Output</p>
+                      <p className="text-xs text-muted-foreground">One test case per line. Format: Input|Output|Secret</p>
                     </div>
                     <Button type="submit" className="w-full gap-2" data-testid="button-create-assignment">
                       <Plus className="h-4 w-4" /> Publish Assignment
