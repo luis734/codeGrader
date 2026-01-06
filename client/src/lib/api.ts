@@ -27,6 +27,7 @@ export interface ApiTest {
   name: string;
   input: string;
   expected: string;
+  secret: boolean;
   status?: string;
   actual?: string;
 }
@@ -103,7 +104,7 @@ export const api = {
       language: string;
       minTestsToPass: number;
       starterCode: string;
-      tests: Array<{ name: string; input: string; expected: string }>;
+      tests: Array<{ name: string; input: string; expected: string; secret: boolean }>;
     }) =>
       fetchApi("/api/assignments", {
         method: "POST",
@@ -116,7 +117,7 @@ export const api = {
       language?: string;
       minTestsToPass?: number;
       starterCode?: string;
-      tests?: Array<{ name: string; input: string; expected: string }>;
+      tests?: Array<{ name: string; input: string; expected: string; secret: boolean }>;
     }) =>
       fetchApi(`/api/assignments/${id}`, {
         method: "PATCH",

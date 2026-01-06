@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ApiUser, ApiAssignment } from "@/lib/api";
+import { formatPrettyDate, formatRelativeDate } from "@/lib/utils";
 
 export default function AdminPage() {
   const { users, assignments, addUser, updateUser, deleteUser, addAssignment, updateAssignment, deleteAssignment } = useApp();
@@ -46,6 +47,7 @@ export default function AdminPage() {
 
   // Assignment Form State
   const [newAssignTitle, setNewAssignTitle] = useState("");
+  const [newAssignDueDate, setNewAssignDueDate] = useState("");
   const [newAssignDesc, setNewAssignDesc] = useState("");
   const [newAssignTests, setNewAssignTests] = useState("");
   const [newStarterCode, setNewStarterCode] = useState("#include <stdio.h>\n\nint main() {\n    // Your code here\n    return 0;\n}");
@@ -61,6 +63,7 @@ export default function AdminPage() {
   const [editingAssignment, setEditingAssignment] = useState<ApiAssignment | null>(null);
   const [editAssignTitle, setEditAssignTitle] = useState("");
   const [editAssignDesc, setEditAssignDesc] = useState("");
+  const [editAssignDueDate, setEditAssignDueDate] = useState("");
   const [editAssignTests, setEditAssignTests] = useState("");
   const [editStarterCode, setEditStarterCode] = useState("");
   const [editMinTests, setEditMinTests] = useState(1);
@@ -132,13 +135,24 @@ export default function AdminPage() {
 
     const parsedTests = newAssignTests
       .split("\n")
+      .map(line => line.trim())
       .filter(t => t.includes("|"))
-      .map((t, i) => {
-        const [input, expected] = t.split("|");
+      .map((line, i) => {
+        const parts = line.split("|").map(p => p.trim());
+
+        if (parts.length < 2) {
+          throw new Error(`Formato inválido en la linea ${i + 1}`);
+        }
+
+        const input = parts[0];
+        const expected = parts[1];
+        const secretRaw = parts[2];
+
         return {
           name: `Test Case ${i + 1}`,
           input: input.trim(),
           expected: expected.trim(),
+          secret: secretRaw === "true",
         };
       });
 
@@ -146,7 +160,7 @@ export default function AdminPage() {
       await addAssignment({
         title: newAssignTitle,
         description: newAssignDesc,
-        dueDate: "Due in 1 week",
+        dueDate: newAssignDueDate,
         minTestsToPass: parsedTests.length || 1,
         starterCode: newStarterCode,
         tests: parsedTests,
@@ -155,6 +169,7 @@ export default function AdminPage() {
       setNewAssignTitle("");
       setNewAssignDesc("");
       setNewAssignTests("");
+      setNewAssignDueDate("");
       setNewStarterCode("#include <stdio.h>\n\nint main() {\n    // Your code here\n    return 0;\n}");
     } catch (error) {
       // Error handled in context
@@ -165,9 +180,10 @@ export default function AdminPage() {
     setEditingAssignment(assignment);
     setEditAssignTitle(assignment.title);
     setEditAssignDesc(assignment.description);
+    setEditAssignDueDate(assignment.dueDate);
     setEditMinTests(assignment.minTestsToPass);
     setEditStarterCode(assignment.starterCode);
-    setEditAssignTests(assignment.tests?.map(t => `${t.input}|${t.expected}`).join("\n") || "");
+    setEditAssignTests(assignment.tests?.map(t => `${t.input}|${t.expected}|${t.secret || ''}`).join("\n") || "");
   };
 
   const handleEditAssignment = async () => {
@@ -176,12 +192,22 @@ export default function AdminPage() {
     const parsedTests = editAssignTests
       .split("\n")
       .filter(t => t.includes("|"))
-      .map((t, i) => {
-        const [input, expected] = t.split("|");
+      .map((line, i) => {
+        const parts = line.split("|").map(p => p.trim());
+
+        if (parts.length < 2) {
+          throw new Error(`Formato inválido en la linea ${i + 1}`);
+        }
+
+        const input = parts[0];
+        const expected = parts[1];
+        const secretRaw = parts[2];
+
         return {
           name: `Test Case ${i + 1}`,
           input: input.trim(),
           expected: expected.trim(),
+          secret: secretRaw === "true",
         };
       });
 
@@ -189,6 +215,7 @@ export default function AdminPage() {
       await updateAssignment(editingAssignment.id, {
         title: editAssignTitle,
         description: editAssignDesc,
+        dueDate: editAssignDueDate,
         minTestsToPass: editMinTests,
         starterCode: editStarterCode,
         tests: parsedTests,
@@ -326,6 +353,13 @@ export default function AdminPage() {
                         <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
                           <span>Tests: {assign.tests?.length || 0}</span>
                           <span>Min to pass: {assign.minTestsToPass}</span>
+                          <span>
+                            {(() => {
+                              const formattedDate = formatPrettyDate(assign.dueDate);
+                              if (formattedDate === "Vencido") return formattedDate;
+                              return `Vence: ${formattedDate}`;
+                            })()}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -356,6 +390,10 @@ export default function AdminPage() {
                       />
                     </div>
                     <div className="space-y-2">
+                        <Label>Due Date</Label>
+                        <Input type="date" value={newAssignDueDate} onChange={e => setNewAssignDueDate(e.target.value)} required data-testid="input-new-assignment-due-date"></Input>
+                    </div>
+                    <div className="space-y-2">
                       <Label>Starter Code</Label>
                       <textarea 
                         className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -365,16 +403,16 @@ export default function AdminPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Test Cases (Input|Expected)</Label>
+                      <Label>Test Cases (Input|Expected|Secret)</Label>
                       <textarea 
                         className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        placeholder={"1|Odd\n2|Even\n10|Even"}
+                        placeholder={"1|Odd\n2|Even|true\n10|Even|false"}
                         value={newAssignTests}
                         onChange={e => setNewAssignTests(e.target.value)}
                         required
                         data-testid="input-new-assignment-tests"
                       />
-                      <p className="text-xs text-muted-foreground">One test case per line. Format: Input|Output</p>
+                      <p className="text-xs text-muted-foreground">One test case per line. Format: Input|Output|Secret</p>
                     </div>
                     <Button type="submit" className="w-full gap-2" data-testid="button-create-assignment">
                       <Plus className="h-4 w-4" /> Publish Assignment
@@ -447,6 +485,10 @@ export default function AdminPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label>Due Date</Label>
+              <Input type="date" value={editAssignDueDate} onChange={e => setEditAssignDueDate(e.target.value)} required data-testid="input-new-assignment-due-date"></Input>
+            </div>
+            <div className="space-y-2">
               <Label>Starter Code</Label>
               <textarea 
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -460,7 +502,7 @@ export default function AdminPage() {
               <Input type="number" min={1} value={editMinTests} onChange={e => setEditMinTests(parseInt(e.target.value) || 1)} data-testid="input-edit-assignment-min-tests" />
             </div>
             <div className="space-y-2">
-              <Label>Test Cases (Input|Expected)</Label>
+              <Label>Test Cases (Input|Expected|Secret)</Label>
               <textarea 
                 className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder={"1|Odd\n2|Even"}
@@ -487,6 +529,10 @@ export default function AdminPage() {
             <div>
               <Label className="text-muted-foreground text-xs uppercase tracking-wider">Description</Label>
               <div className="mt-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: viewingAssignment?.description || "" }} />
+            </div>
+            <div>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Due Date</Label>
+              <div className="mt-2 prose prose-sm max-w-none">Vence {formatRelativeDate(viewingAssignment?.dueDate || '')} ({formatPrettyDate(viewingAssignment?.dueDate || '')})</div>
             </div>
             <div>
               <Label className="text-muted-foreground text-xs uppercase tracking-wider">Starter Code</Label>
