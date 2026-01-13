@@ -23,9 +23,6 @@ interface TestRunnerProps {
 }
 
 export function TestRunner({ tests, onRunTests, isRunning }: TestRunnerProps) {
-  const totalTests = tests.length;
-  const passedTests = tests.filter(t => t.status === "passed").length;
-
   const [expandedTests, setExpandedTests] = useState<Set<string>>(new Set());
 
   useEffect(() => {

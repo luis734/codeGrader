@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { api, type ApiUser, type ApiAssignment, type ApiSubmission } from "./api";
+import { api, type ApiUser, type ApiAssignment, type ApiSubmission, AssignmentTestInput } from "./api";
 
 interface AppContextType {
   user: ApiUser | null;
@@ -23,7 +23,7 @@ interface AppContextType {
     dueDate: string;
     minTestsToPass: number;
     starterCode: string;
-    tests: Array<{ name: string; input: string; expected: string }>;
+    tests: AssignmentTestInput[];
   }) => Promise<void>;
   updateAssignment: (id: string, data: {
     title?: string;
@@ -31,7 +31,7 @@ interface AppContextType {
     dueDate?: string;
     minTestsToPass?: number;
     starterCode?: string;
-    tests?: Array<{ name: string; input: string; expected: string }>;
+    tests?: AssignmentTestInput[];
   }) => Promise<void>;
   deleteAssignment: (id: string) => Promise<void>;
   submitAssignment: (assignmentId: string, data: {
@@ -56,14 +56,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Check if user is logged in on mount
   useEffect(() => {
-    api.auth.me()
-      .then(data => {
+    const loadUser = async () => {
+      try {
+        // Consultamos el endpoint
+        const result = api.auth.me();
+        if (!result) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Si se devolvio una promesa esperamos el resultado del api
+        const data = await result;
         setUser(data.user);
+      } catch (error) {
+        setUser(null);
+      } finally {
         setIsLoading(false);
-      })
-      .catch(() => {
-        setIsLoading(false);
-      });
+      }
+    };
+
+    loadUser();
   }, []);
 
   // Load assignments when user logs in
@@ -186,7 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dueDate: string;
     minTestsToPass: number;
     starterCode: string;
-    tests: Array<{ name: string; input: string; expected: string }>;
+    tests: AssignmentTestInput[];
   }) => {
     try {
       await api.assignments.create({
@@ -211,7 +223,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dueDate?: string;
     minTestsToPass?: number;
     starterCode?: string;
-    tests?: Array<{ name: string; input: string; expected: string }>;
+    tests?: AssignmentTestInput[];
   }) => {
     try {
       await api.assignments.update(id, data);

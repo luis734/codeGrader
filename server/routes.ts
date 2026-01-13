@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import session from "express-session";
 import { createUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -9,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { compileC, generateSubmissionID, runTest, SANDBOX_BASE_DIR } from "./sandbox";
 import path from "node:path";
 import fs from 'node:fs';
+import { generateToken, verifyToken } from "./utils/authentication";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -60,41 +60,26 @@ const submitCodeSchema = z.object({
   score: z.string(),
 });
 
-declare module "express-session" {
-  interface SessionData {
-    userId: string;
-  }
-}
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Session middleware
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "codecheck-secret-key-change-in-production",
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === "production",
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      },
-    })
-  );
-
   // Authentication middleware
   const requireAuth = async (req: any, res: any, next: any) => {
-    if (!req.session.userId) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const user = await storage.getUser(req.session.userId);
-    if (!user) {
-      return res.status(401).json({ error: "User not found" });
+    const token = authHeader.split(" ")[1];
+
+    try {
+      const decoded = verifyToken(token);
+      req.user = decoded;
+      next();
+    } catch (error) {
+      return res.status(401).json({ error: "Invalid token" });
     }
-    req.user = user;
-    next();
   };
 
   const requireAdmin = async (req: any, res: any, next: any) => {
@@ -119,9 +104,9 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      req.session.userId = user.id;
+      const token = generateToken({id: user.id, email: user.email, role: user.role});
       const { passwordHash, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
+      res.json({ token, user: userWithoutPassword });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: fromZodError(error).toString() });
@@ -130,15 +115,8 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy(() => {
-      res.json({ success: true });
-    });
-  });
-
   app.get("/api/auth/me", requireAuth, async (req: any, res) => {
-    const { passwordHash, ...userWithoutPassword } = req.user;
-    res.json({ user: userWithoutPassword });
+    res.json({ user: req.user });
   });
 
   // User routes
@@ -207,12 +185,12 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/users/:id", requireAuth, requireAdmin, async (req, res) => {
+  app.delete("/api/users/:id", requireAuth, requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
       
       // Prevent self-deletion
-      if (req.session.userId === id) {
+      if (req.user?.id === id) {
         return res.status(400).json({ error: "Cannot delete your own account" });
       }
 

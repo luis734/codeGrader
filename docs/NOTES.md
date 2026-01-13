@@ -1,39 +1,38 @@
-## Resumen de sesión – Sandbox / PASO 2
+## Decisiones tomadas
+- Se decidió migrar de autenticación basada en **sessions** a **JWT** para reducir el número de peticiones innecesarias en hosting gratuito.
+- Se optó por manejar el JWT en el **frontend** (localStorage) y enviarlo en la cabecera `Authorization: Bearer <token>`.
+- Se mantuvo el endpoint `auth/me` como punto central para validar el token y obtener el usuario autenticado.
+- Se separaron claramente los tipos de datos de **entrada (Input / DTO)** y **salida (Api / Response)** para evitar errores de tipado en TypeScript.
+- Se corrigió el tipado del `AppContextType` para que coincida exactamente con la implementación real del contexto.
 
-- **Decisiones tomadas**
-  - El binario se ejecuta con un timeout y pasandole la entrada recibida en el parametro.
-  - `runTest` ejecuta el binario con las entradas recibidas y devuelve el resultado en `stdout, stderr, exitCode, timeout`.
-  - Se probará `runTest` mediante un script ad-hoc en `server/test-compilation.ts`.
+## Qué quedó implementado
+- Backend:
+  - Autenticación con JWT.
+  - Middleware `requireAuth` que valida el token y agrega `req.user`.
+  - Middleware `requireAdmin` basado en `req.user.role`.
+  - Endpoint `auth/me` que devuelve el usuario a partir del token.
+- Frontend:
+  - Manejo del estado global del usuario con `React Context`.
+  - Integración del JWT en el cliente (envío automático en cada request).
+  - Lógica de carga inicial (`loadUser`) para validar sesión al montar la app.
+  - Corrección de errores de tipado en `addAssignment` y `updateAssignment`.
+  - Uso consistente de tipos (`AssignmentTestInput`, `ApiTest`, etc.).
 
-- **Qué quedó implementado**
-  - `runTest` ya evalua el binario con la entrada, devolviendo `stdout/stderr/exitCode/timeout`.
-  - Se añadió `server/test-compilation.ts` que corre un casos válido pasando un numero y leyendolo desde el binario `stdout`.
-  - Limpieza automática de `tmp/<submission-id>/` tras las pruebas.
-  - Ajustar errores visuales:
-    - El editor no tiene scroll, (posiblemente el test suite tampoco).
-    - En el dashboard los datos no se despliegan correctamente.
+## Qué queda pendiente
+- Implementar **tests automáticos** para JWT:
+  - Token válido
+  - Token inválido
+  - Token expirado
+  - Request sin token
 
-- **Qué quedó pendiente**
-  - Agregar una seccion para tareas completadas, vencidas y proximas.
+## Qué sigue según el roadmap
+- Implementar testing (unitario y de integración) para autenticación y autorización.
+- Agregar refresh token o estrategia de renovación si es necesario.
+- Optimizar llamadas al backend para reducir consumo de requests.
+- Endurecer seguridad:
+  - Expiración corta de access token
+  - Rotación de tokens
+- Documentar flujo de autenticación (diagramas + README).
 
 ---
-
-## Resumen de sesión – Operaciones de Submissions
-
-- **Decisiones tomadas**
-  - Las submissions del estudiante se incluyen directamente en la respuesta de `/api/assignments` como propiedad `submission`.
-  - Solo se actualiza la submission si está en estado "in_progress" y el nuevo score es mejor que el existente.
-  - Las submissions completadas ("completed") no se sobrescriben para proteger el mejor resultado.
-
-- **Qué quedó implementado**
-  - Se agregó el tipo `ApiSubmission` en `client/src/lib/api.ts`.
-  - Se agregaron operaciones básicas de submissions en el contexto (`refreshSubmissions`, `submitAssignment`).
-  - Se modificó el servidor para incluir la submission completa en la respuesta de assignments para estudiantes.
-  - Se actualizó `refreshSubmissions()` para extraer submissions de los assignments.
-  - Se implementó lógica para actualizar submissions solo si están "in_progress" y el score es mejor.
-  - El editor ahora carga automáticamente el código de la submission previa si existe, o el `starterCode` si no.
-  - Se actualiza automáticamente el dashboard después de guardar una submission.
-  - Se agrego el input y etiquetas para mostrar la fecha de vencimiento.
-
-- **Qué quedó pendiente**
-  - (Ver sección anterior)
+Estado actual: **Migración a JWT funcional y tipada correctamente.**

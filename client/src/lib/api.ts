@@ -44,15 +44,38 @@ export interface ApiSubmission {
   submittedAt: string;
 }
 
+export type AssignmentTestInput = {
+  name: string,
+  input: string,
+  expected: string,
+  secret: boolean
+}
+
+function getToken() {
+  return localStorage.getItem("token");
+}
+function forceLogout() {
+  localStorage.removeItem("token");
+  window.location.href = "/auth";
+}
+
 async function fetchApi(url: string, options?: RequestInit) {
+  const token = getToken();
+  const isLoginRequest = url.includes("/api/auth/login");
+
   const response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorizarion: `Bearer ${token}`}: {}),
       ...options?.headers,
     },
-    credentials: "include",
   });
+
+  if (response.status === 401 && token && !isLoginRequest) {
+    forceLogout();
+    throw new Error("Session expired");
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Request failed" }));
@@ -70,9 +93,12 @@ export const api = {
         body: JSON.stringify({ email, password }),
       }),
     logout: () =>
-      fetchApi("/api/auth/logout", { method: "POST" }),
-    me: () =>
-      fetchApi("/api/auth/me"),
+      forceLogout(),
+    me: () => {
+      const token = getToken();
+      if (!token) return null;
+      return fetchApi("/api/auth/me");
+    },
   },
 
   users: {

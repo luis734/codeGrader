@@ -1,7 +1,10 @@
 // Para ejecutar el archivo y correr la prueba del main ejecuta el comando: 
 // * npx tsx server/test-compilation.ts
+import path from 'node:path';
+import { compileC, generateSubmissionID, runTest } from "../sandbox";
 
-import { compileC, runTest } from "./sandbox";
+export const SANDBOX_BASE_DIR = path.join(process.cwd(), 'tmp');
+
 
 // Pequeño helper para imprimir resultados de forma legible
 function logResult(label: string, result: any) {
@@ -54,8 +57,10 @@ int main() {
     return 0;
 }`;
     
+    // Creamos el directorio de trabajo
+    const workDir = path.join(SANDBOX_BASE_DIR, generateSubmissionID());
     // Compilamos el codigo
-    const result = await compileC(leerNum);
+    const result = await compileC(leerNum, workDir);
     logResult("Compilacion del codigo", result);
 
     // Ejecutamos un test solo si result.binaryPath está definido

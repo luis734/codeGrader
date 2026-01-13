@@ -172,8 +172,8 @@ Esta lista está pensada para que marques los ítems conforme avances. Está ali
 
 ### Pruebas manuales
 
-- [ ] Probar compilación y ejecución de un programa en C que imprime "Hello World".
-- [ ] Probar un código con error de compilación y revisar que el error se propaga correctamente.
-- [ ] Probar un programa con bucle infinito para verificar que el timeout de ejecución funciona.
+- [x] Probar compilación y ejecución de un programa en C que imprime "Hello World".
+- [x] Probar un código con error de compilación y revisar que el error se propaga correctamente.
+- [x] Probar un programa con bucle infinito para verificar que el timeout de ejecución funciona.
 
 Cuando todos estos puntos estén marcados, podrás considerar que el **PASO 2 (Sandbox mínimo para ejecutar C)** está completado a nivel de backend, y estarás listo para avanzar al **PASO 3 (Formato de tests y motor de evaluación)**, que reutilizará directamente las funciones de este módulo `sandbox`. 

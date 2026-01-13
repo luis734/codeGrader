@@ -103,7 +103,7 @@ http://localhost:5000
 1. Entra como **admin** y crea tareas (assignments) con:
    - Título, descripción, fecha límite.
    - Código inicial en C (`starterCode`).
-   - Tests (input / output esperado).
+   - Tests (input / output esperado / secreto), donde "secreto" es un booleano que indica si el test es oculto para los estudiantes.
 2. Entra como **estudiante**:
    - Ve las tareas en el dashboard.
    - Abre el editor (`/editor/:id`), escribe o sube un archivo `.c`, y ejecuta los tests.

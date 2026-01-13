@@ -41,26 +41,26 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 **Objetivo**: Usar los tests guardados en la base (`tests` table) para alimentar el binario C y comparar salidas de forma consistente.
 
-- [ ] Confirmar/definir formato de tests:
-  - [ ] `tests.input`: texto completo que se envía a `stdin` (puede tener varias líneas).
-  - [ ] `tests.expected`: salida esperada exacta en `stdout` (también multilínea).
-- [ ] Crear función de normalización de salida:
-  - [ ] Convertir `\r\n` a `\n`.
-  - [ ] Eliminar espacios en blanco al final de cada línea.
-  - [ ] Opcional: ignorar líneas vacías adicionales al final.
-- [ ] Implementar comparación:
-  - [ ] `compareOutput(actual: string, expected: string): boolean`.
-- [ ] Crear endpoint en backend, por ejemplo `POST /api/assignments/:id/run`:
-  - [ ] Recibe `{ code: string }`.
-  - [ ] Busca tests en DB para esa asignación.
-  - [ ] Compila una vez el código.
-  - [ ] Ejecuta todos los tests (secuencialmente o con límite de concurrencia).
-  - [ ] Devuelve lista de tests con:
-    - [ ] `status: "passed" | "failed" | "error" | "timeout"`.
-    - [ ] `input`, `expected`, `actual`, mensajes de error cuando aplique.
-- [ ] Adaptar el frontend `EditorPage` para:
-  - [ ] Reemplazar la simulación actual de tests por llamada al nuevo endpoint.
-  - [ ] Seguir mostrando resultados en el componente `TestRunner`.
+- [x] Confirmar/definir formato de tests:
+  - [x] `tests.input`: texto completo que se envía a `stdin` (puede tener varias líneas).
+  - [x] `tests.expected`: salida esperada exacta en `stdout` (también multilínea).
+- [x] Crear función de normalización de salida:
+  - [x] Convertir `\r\n` a `\n`.
+  - [x] Eliminar espacios en blanco al final de cada línea.
+  - [x] Opcional: ignorar líneas vacías adicionales al final.
+- [x] Implementar comparación:
+  - [x] `compareOutput(actual: string, expected: string): boolean`.
+- [x] Crear endpoint en backend, por ejemplo `POST /api/assignments/:id/run`:
+  - [x] Recibe `{ code: string }`.
+  - [x] Busca tests en DB para esa asignación.
+  - [x] Compila una vez el código.
+  - [x] Ejecuta todos los tests (secuencialmente o con límite de concurrencia).
+  - [x] Devuelve lista de tests con:
+    - [x] `status: "passed" | "failed" | "error" | "timeout"`.
+    - [x] `input`, `expected`, `actual`, mensajes de error cuando aplique.
+- [x] Adaptar el frontend `EditorPage` para:
+  - [x] Reemplazar la simulación actual de tests por llamada al nuevo endpoint.
+  - [x] Seguir mostrando resultados en el componente `TestRunner`.
 
 ---
 
@@ -68,22 +68,22 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 **Objetivo**: Tener 1–2 problemas de prueba totalmente funcionales, desde la creación hasta la corrección automática.
 
-- [ ] Definir al menos 2 problemas en lenguaje natural (enunciado):
-  - [ ] Problema 1: Suma de dos enteros.
-  - [ ] Problema 2: Máximo de N números.
-- [ ] Crear estas asignaciones en la app (o vía seed):
-  - [ ] `assignments` con `starterCode` en C (plantilla de `main`).
-  - [ ] `tests` con entradas y salidas esperadas bien definidas.
-- [ ] Ajustar el flujo de envío:
-  - [ ] Botón "Run tests" llama a `/run` y actualiza la UI.
-  - [ ] Botón "Submit":
+- [x] Definir al menos 2 problemas en lenguaje natural (enunciado):
+  - [x] Problema 1: Promedio de 3 numeros (flotantes o enteros).
+  - [/] Problema 2: Máximo de N números.
+- [x] Crear estas asignaciones en la app (o vía seed):
+  - [x] `assignments` con `starterCode` en C (plantilla de `main`).
+  - [x] `tests` con entradas y salidas esperadas bien definidas.
+- [x] Ajustar el flujo de envío:
+  - [x] Botón "Run tests" llama a `/run` y actualiza la UI.
+  - [/] Botón "Submit":
     - [ ] Envía a `/submit` el resumen (`passedTests`, `totalTests`, `status`, `score`, código fuente).
-    - [ ] Actualiza el estado de la tarea en el dashboard.
-- [ ] Probar el flujo completo con:
-  - [ ] Solución correcta.
-  - [ ] Solución con errores de compilación.
-  - [ ] Solución con errores lógicos (tests que fallan).
-  - [ ] Programa que se cuelga / entra en bucle (verificar timeout).
+    - [x] Actualiza el estado de la tarea en el dashboard.
+- [x] Probar el flujo completo con:
+  - [x] Solución correcta.
+  - [x] Solución con errores de compilación.
+  - [x] Solución con errores lógicos (tests que fallan).
+  - [x] Programa que se cuelga / entra en bucle (verificar timeout).
 
 ---
 
