@@ -95,6 +95,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user);
       toast({ title: `Welcome back, ${data.user.name}` });
       setLocation(data.user.role === "admin" ? "/admin" : "/dashboard");
+      localStorage.setItem('token', data.token);
     } catch (error: any) {
       toast({ 
         title: "Login failed", 

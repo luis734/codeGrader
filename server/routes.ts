@@ -68,7 +68,7 @@ export async function registerRoutes(
   const requireAuth = async (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     const token = authHeader.split(" ")[1];
