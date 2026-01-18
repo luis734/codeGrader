@@ -68,7 +68,7 @@ export async function registerRoutes(
   const requireAuth = async (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     const token = authHeader.split(" ")[1];
@@ -104,7 +104,7 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      const token = generateToken({id: user.id, email: user.email, role: user.role});
+      const token = generateToken({id: user.id, name:user.name, email: user.email, role: user.role});
       const { passwordHash, ...userWithoutPassword } = user;
       res.json({ token, user: userWithoutPassword });
     } catch (error) {

@@ -77,7 +77,8 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 - [x] Ajustar el flujo de envío:
   - [x] Botón "Run tests" llama a `/run` y actualiza la UI.
   - [/] Botón "Submit":
-    - [ ] Envía a `/submit` el resumen (`passedTests`, `totalTests`, `status`, `score`, código fuente).
+    - [-] Envía a `/submit` el resumen (`passedTests`, `totalTests`, `status`, `score`, código fuente).
+    // Al evaluar los tests se actualiza el submit en BD si el score es mejor o crea un nuevo si no hay un submit del alumno
     - [x] Actualiza el estado de la tarea en el dashboard.
 - [x] Probar el flujo completo con:
   - [x] Solución correcta.
@@ -114,7 +115,8 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 ## 6. Mejoras futuras (ideas)
 
-- [ ] Soporte para otros lenguajes (C++, Python, etc.).
+- [ ] Guardar el resultado de los test.
 - [ ] Estadísticas por alumno y por tarea.
 - [ ] Exportar calificaciones.
+- [ ] Soporte para otros lenguajes (C++, Python, etc.).
 - [ ] Rúbricas y feedback textual automático.

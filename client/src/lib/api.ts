@@ -67,7 +67,7 @@ async function fetchApi(url: string, options?: RequestInit) {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorizarion: `Bearer ${token}`}: {}),
+      ...(token ? { Authorization: `Bearer ${token}`}: {}),
       ...options?.headers,
     },
   });
