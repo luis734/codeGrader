@@ -115,7 +115,8 @@ La idea es avanzar por pasos pequeños, siempre con algo utilizable al final de 
 
 ## 6. Mejoras futuras (ideas)
 
-- [ ] Soporte para otros lenguajes (C++, Python, etc.).
+- [ ] Guardar el resultado de los test.
 - [ ] Estadísticas por alumno y por tarea.
 - [ ] Exportar calificaciones.
+- [ ] Soporte para otros lenguajes (C++, Python, etc.).
 - [ ] Rúbricas y feedback textual automático.
