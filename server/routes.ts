@@ -104,7 +104,7 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      const token = generateToken({id: user.id, email: user.email, role: user.role});
+      const token = generateToken({id: user.id, name:user.name, email: user.email, role: user.role});
       const { passwordHash, ...userWithoutPassword } = user;
       res.json({ token, user: userWithoutPassword });
     } catch (error) {

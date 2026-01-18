@@ -277,7 +277,7 @@ export default function EditorPage() {
           <ResizableHandle />
           
           <ResizablePanel defaultSize={35} minSize={20} className="flex flex-col h-full">
-            <div className="max-w-fullmax-h-[20%] overflow-auto">
+            <div className="max-w-fullmax h-[30%] overflow-auto">
               <InstructionBox description={assignment.description}/>
             </div>
 
