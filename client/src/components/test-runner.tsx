@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Play, Loader2, AlertCircle, LockKeyhole, ChevronDown } from "lucide-react";
+import { CheckCircle2, XCircle, Play, Loader2, AlertCircle, LockKeyhole, ChevronDown, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,9 +20,12 @@ interface TestRunnerProps {
   onRunTests: () => void;
   isRunning: boolean;
   score?: number;
+  // Nuevas variables para controlar el estado de carda de intento
+  onSubmiting: () => void;
+  isSubmiting: boolean;
 }
 
-export function TestRunner({ tests, onRunTests, isRunning }: TestRunnerProps) {
+export function TestRunner({ tests, onRunTests, isRunning, onSubmiting, isSubmiting }: TestRunnerProps) {
   const [expandedTests, setExpandedTests] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -54,26 +57,51 @@ export function TestRunner({ tests, onRunTests, isRunning }: TestRunnerProps) {
           <p className="text-sm text-muted-foreground">
           </p>
         </div>
-        <Button 
-          onClick={onRunTests} 
-          disabled={isRunning}
-          className={cn(
-            "min-w-[120px]",
-            isRunning ? "opacity-90" : ""
-          )}
-        >
-          {isRunning ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Running...
-            </>
-          ) : (
-            <>
-              <Play className="mr-2 h-4 w-4 fill-current" />
-              Run Tests
-            </>
-          )}
-        </Button>
+        <div className="flex flex-row flex-wrap justify-end">
+          <Button
+            variant="success"
+            onClick={onSubmiting}
+            disabled={isSubmiting}
+            className={cn(
+              "min-w-[120px]",
+              isSubmiting ? "opacity-90" : ""
+            )}
+          >
+            {isSubmiting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submiting...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                Submit Answer
+              </>
+            )}
+          </Button>
+
+          {/* Boton para ejecutar los tests sobre el codigo */}
+          <Button 
+            onClick={onRunTests} 
+            disabled={isRunning}
+            className={cn(
+              "min-w-[120px]",
+              isRunning ? "opacity-90" : ""
+            )}
+          >
+            {isRunning ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Running...
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4 fill-current" />
+                Run Tests
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-4">

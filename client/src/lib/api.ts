@@ -32,6 +32,23 @@ export interface ApiTest {
   actual?: string;
 }
 
+export interface ApiTestResult {
+  id: string;
+  name: string;
+  passed: boolean;
+  actual: string;
+  stderr: string;
+  timeout: boolean;
+}
+
+export interface ApiRunTestResponse {
+  compileError?: boolean;
+  stderr?: string;
+  passedTests?: number;
+  totalTests?: number;
+  results: ApiTestResult[];
+}
+
 export interface ApiSubmission {
   id: string;
   userId: string;
@@ -151,6 +168,11 @@ export const api = {
       }),
     delete: (id: string) =>
       fetchApi(`/api/assignments/${id}`, { method: "DELETE" }),
+    runTests: (assignmentId: string, code: string): Promise<ApiRunTestResponse> =>
+      fetchApi(`/api/assignments/${assignmentId}/run-tests`, {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      }),
   },
 
   submissions: {

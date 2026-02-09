@@ -175,20 +175,48 @@ async function ensureWorkDir(workDir: string) {
 }
 
 function cleanGCCError(stderr: string): string {
-    // Limpiar TODAS las rutas absolutas
-    stderr = stderr.replace(
-        /([A-Za-z]:[\\/][^\s:\n]+[\\/])/g,
-        ''
-    );
+  if (!stderr || stderr.trim() === '') {
+      return "Compilation failed with no error message";
+  }
 
-    // Limpiar rutas intermedias del linker
-    stderr = stderr.replace(
-        /.*ld\.exe: /g,
-        ''
-    ).replace(
-        /collect2\.exe: /g,
-        ''
-    );
-    
-    return stderr.trim();
+  let cleaned = stderr;
+
+  // 1. Limpiar rutas absolutas pero mantener estructura archivo:linea:columna
+  cleaned = cleaned.replace(
+      /([A-Za-z]:[\\/]|\/)[^\s:\n]+[\\/]/g,
+      ''
+  );
+
+  // 2. Eliminar mensajes del linker
+  cleaned = cleaned.replace(
+      /.*(ld\.exe|collect2\.exe|ld):.*/gi,
+      ''
+  );
+
+  // 3. Filtrar líneas vacías y limpiar espacios
+  const lines = cleaned
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => {
+          // Mantener líneas con contenido útil
+          return line.length > 0 && 
+                 (line.includes(':') || 
+                  line.match(/\d+/) || 
+                  line.length > 3);
+      });
+
+  // 4. Si no hay líneas útiles, devolver mensaje por defecto
+  if (lines.length === 0) {
+      // Intentar extraer algo del original
+      const fallback = stderr.trim().substring(0, 300);
+      return fallback || "Compilation failed. Please check your code syntax.";
+  }
+
+  // 5. Unir y limpiar
+  let result = lines.join('\n').trim();
+  
+  // Limpiar múltiples espacios
+  result = result.replace(/[ \t]{2,}/g, ' ');
+
+  return result || "Compilation failed. Please check your code syntax.";
 }

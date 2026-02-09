@@ -30,6 +30,7 @@ export default function EditorPage() {
   );
   const [tests, setTests] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [isSubmiting, setIsSubmiting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -90,25 +91,7 @@ export default function EditorPage() {
 
     try {
       // 1️⃣ Llamamos al backend
-      const response = await fetch(
-        `/api/assignments/${assignment.id}/run-tests`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ code }),
-        }
-      );
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      
+      const data = await api.assignments.runTests(assignment.id, code);
       
       // 2️⃣ Error de compilacion
       if (data.compileError) {
@@ -119,7 +102,6 @@ export default function EditorPage() {
             actual: undefined,
           }))
         );
-        console.log("ERROR DE COMPILACION: ", data);
         toast({
           title: "Compilation error",
           description: data.stderr,
@@ -164,56 +146,6 @@ export default function EditorPage() {
         title: "Tests completed",
         description: `Passed ${passedCount}/${data.totalTests}`,
       });
-
-      // Actualizar la submission del usuario cuando los tests se completen correctamente
-      // Solo actualizar si la submission está "in_progress" y el nuevo score es mejor
-      try {
-        const status = passedCount >= assignment.minTestsToPass ? "completed" : "in_progress";
-        const newScore = `${passedCount}/${data.totalTests}`;
-        
-        // Obtener la submission actual del usuario para este assignment
-        const currentSubmission = assignment.submission;
-        
-        // Extraer el número de tests pasados de un score (formato: "X/Y")
-        const getPassedTests = (score: string): number => {
-          const [passed] = score.split('/').map(Number);
-          return passed;
-        };
-        
-        // Condiciones para actualizar:
-        // 1. No hay submission previa (primera vez)
-        // 2. O hay submission "in_progress" Y el nuevo score es mejor
-        const hasNoSubmission = !currentSubmission;
-        const isInProgress = currentSubmission?.status === "in_progress";
-        const isBetterScore = currentSubmission 
-          ? passedCount > getPassedTests(currentSubmission.score)
-          : false;
-        
-        const shouldUpdate = hasNoSubmission || (isInProgress && isBetterScore);
-        
-        if (shouldUpdate) {
-          await api.submissions.submit(assignment.id, {
-            code,
-            passedTests: passedCount,
-            totalTests: data.totalTests,
-            status,
-            score: newScore,
-          });
-          
-          // Refrescar las submissions y assignments para actualizar el estado
-          await refreshAssignments();
-        }
-      } catch (error: any) {
-        // No mostramos error al usuario si falla la actualización de la submission
-        // ya que los tests se ejecutaron correctamente
-        toast({
-          title: 'Error updating submission',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
-      
-
     } catch (error: any) {
       toast({
         title: "Error running tests",
@@ -222,6 +154,46 @@ export default function EditorPage() {
       });
     } finally {
       setIsRunning(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmiting(true);
+    const passedTests = tests.filter(t => t.status === "passed").length;
+    const totalTests = tests.length;
+    
+    if (totalTests === 0 || tests.every(t => t.status === "pending")) {
+      toast({
+        title: "No tests run",
+        description: "Please run tests before submitting",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      await api.submissions.submit(assignment.id, {
+        code,
+        passedTests,
+        totalTests,
+        status: passedTests >= assignment.minTestsToPass ? "completed" : "in_progress",
+        score: `${passedTests}/${totalTests}`
+      });
+      
+      await refreshAssignments();
+      
+      toast({
+        title: "Submission successful",
+        description: `Submitted with score: ${passedTests}/${totalTests}`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error submitting",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmiting(false); 
     }
   };
 
@@ -285,7 +257,9 @@ export default function EditorPage() {
               <TestRunner
                 tests={tests} 
                 onRunTests={runTests} 
-                isRunning={isRunning} 
+                isRunning={isRunning}
+                onSubmiting={handleSubmit}
+                isSubmiting={isSubmiting}
               />
             </div>
           </ResizablePanel>
