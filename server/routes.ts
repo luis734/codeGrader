@@ -432,7 +432,9 @@ export async function registerRoutes(
       if(!compileResult.success || !compileResult.binaryPath) {
         return res.json({
           compileError: true,
-          stderr: compileResult.stderr
+          stderr: compileResult.stderr,
+          stdout: compileResult.stdout,
+          timeout: compileResult.timeout
         });
       }
   

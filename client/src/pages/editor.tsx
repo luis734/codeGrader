@@ -102,9 +102,17 @@ export default function EditorPage() {
             actual: undefined,
           }))
         );
+
+        const compileMsg =
+          data.stderr?.trim()
+            ? data.stderr
+            : data.timeout
+            ? "La compilación excedió el tiempo límite."
+            : "Error de compilación (sin detalles).";
+
         toast({
           title: "Compilation error",
-          description: data.stderr,
+          description: compileMsg,
           variant: "destructive"
         });
 

@@ -37,6 +37,8 @@ export async function compileC(
 
     // 3️⃣ Compiulamos y devolvemos el resultado
     return new Promise<CompileResult> ((resolve) => {
+        const COMPILATION_TIMEOUT_MS = 5000;
+
         const args = [
             sourcePath,
             '-std=c11',
@@ -64,13 +66,24 @@ export async function compileC(
         const timer = setTimeout(() => {
             timeout = true;
             gcc.kill('SIGKILL');
-        }, 2000);
+        }, COMPILATION_TIMEOUT_MS);
 
         gcc.on('close', (exitCode) => {
             clearTimeout(timer);
 
-            // Limpiamos el mensaje de error solo si stderr tiene contenido
-            const cleanedStderr = stderr ? cleanGCCError(stderr) : '';
+            // Normalizamos el error para que nunca regrese "stderr: ''" sin contexto.
+            let cleanedStderr = '';
+            const stderrTrimmed = stderr.trim();
+
+            if (timeout) {
+                cleanedStderr = stderrTrimmed
+                    ? cleanGCCError(stderr)
+                    : `Compilación excedió el tiempo límite de ${COMPILATION_TIMEOUT_MS}ms.`;
+            } else if (stderrTrimmed) {
+                cleanedStderr = cleanGCCError(stderr);
+            } else if (exitCode !== 0) {
+                cleanedStderr = 'Compilación fallida pero stderr está vacío.';
+            }
 
             resolve({
                 success: exitCode === 0 && !timeout,

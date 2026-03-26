@@ -44,6 +44,8 @@ export interface ApiTestResult {
 export interface ApiRunTestResponse {
   compileError?: boolean;
   stderr?: string;
+  timeout?: boolean;
+  stdout?: string;
   passedTests?: number;
   totalTests?: number;
   results: ApiTestResult[];
